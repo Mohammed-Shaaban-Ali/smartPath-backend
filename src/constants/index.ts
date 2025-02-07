@@ -2,7 +2,7 @@
 export const API_PREFIX = "/api/v1";
 export const PORT = process.env.PORT as string;
 export const MONGO_URI = process.env.MONGO_URI as string;
-// export const PROD_URL = "https://langu-speak-api.vercel.app/api/v1";
+export const PROD_URL = "https://smart-path-seven.vercel.app/api/v1";
 export const LOCAL_URL = `http://localhost:2530${API_PREFIX}`;
 
 // Legacy Auth
