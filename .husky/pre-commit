@@ -1,0 +1,3 @@
+echo "--> Running pre-commit scripts ⏳"
+npm run format
+echo "--> Pre-commit scripts done successfully ✅"
