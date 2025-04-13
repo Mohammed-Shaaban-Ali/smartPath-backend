@@ -1,0 +1,122 @@
+import { Request, Response, NextFunction } from "express";
+import Roadmap from "../models/Roadmap";
+import cloudinary from "../config/cloudinary";
+import AppError from "../utils/app-error.util";
+import formatRes from "../utils/format-res.util";
+
+/**
+ * Get all roadmaps
+ */
+export const getRoadmaps = async (
+  _req: Request,
+  res: Response,
+  next: NextFunction
+) => {
+  try {
+    const roadmaps = await Roadmap.find().populate("framework"); // Populate Framework details
+    res.json(formatRes("Roadmaps fetched successfully", { roadmaps }));
+  } catch (err) {
+    next(err);
+  }
+};
+
+/**
+ * Get a roadmap by ID
+ */
+export const getRoadmapById = async (
+  req: Request,
+  res: Response,
+  next: NextFunction
+) => {
+  try {
+    const roadmap = await Roadmap.findById(req.params.id).populate("framework");
+    if (!roadmap) throw new AppError("Roadmap not found", 404);
+    res.json(formatRes("Roadmap fetched successfully", { roadmap }));
+  } catch (err) {
+    next(err);
+  }
+};
+
+/**
+ * Create a new roadmap with Cloudinary icon upload
+ */
+export const createRoadmap = async (
+  req: Request,
+  res: Response,
+  next: NextFunction
+) => {
+  try {
+    const { title, link, framework } = req.body;
+    if (!title || !link || !framework) {
+      throw new AppError("Title, link, and framework are required", 400);
+    }
+
+    let iconUrl = "";
+
+    // Upload icon image if available
+    if (req.file) {
+      const result = await cloudinary.uploader.upload(req.file.path, {
+        folder: "roadmaps",
+        resource_type: "image",
+      });
+      iconUrl = result.secure_url;
+    }
+
+    const roadmap = new Roadmap({ title, link, framework, icon: iconUrl });
+    await roadmap.save();
+    res
+      .status(201)
+      .json(formatRes("Roadmap created successfully", { roadmap }));
+  } catch (err) {
+    next(err);
+  }
+};
+
+/**
+ * Update a roadmap by ID
+ */
+export const updateRoadmap = async (
+  req: Request,
+  res: Response,
+  next: NextFunction
+) => {
+  try {
+    const { title, link, framework } = req.body;
+    let updateData: any = { title, link, framework };
+
+    // Upload new icon image if provided
+    if (req.file) {
+      const result = await cloudinary.uploader.upload(req.file.path, {
+        folder: "roadmaps",
+        resource_type: "image",
+      });
+      updateData.icon = result.secure_url;
+    }
+
+    const roadmap = await Roadmap.findByIdAndUpdate(req.params.id, updateData, {
+      new: true,
+    });
+
+    if (!roadmap) throw new AppError("Roadmap not found", 404);
+    res.json(formatRes("Roadmap updated successfully", { roadmap }));
+  } catch (err) {
+    next(err);
+  }
+};
+
+/**
+ * Delete a roadmap by ID
+ */
+export const deleteRoadmap = async (
+  req: Request,
+  res: Response,
+  next: NextFunction
+) => {
+  try {
+    const roadmap = await Roadmap.findByIdAndDelete(req.params.id);
+    if (!roadmap) throw new AppError("Roadmap not found", 404);
+    res.json(formatRes("Roadmap deleted successfully", {}));
+  } catch (err) {
+    next(err);
+  }
+};
