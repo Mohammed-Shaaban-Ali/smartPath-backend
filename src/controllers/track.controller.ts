@@ -29,9 +29,9 @@ export const getTrackById = asyncHandler(
  * Create a new track with Cloudinary icon uploads
  */
 export const createTrack = asyncHandler(async (req: Request, res: Response) => {
-  const { title, body, sectionId } = req.body;
-  if (!title || !body || !sectionId)
-    throw new AppError("Title, body, and sectionId are required", 400);
+  const { title, body, section } = req.body;
+  if (!title || !body || !section)
+    throw new AppError("Title, body, and section are required", 400);
 
   let iconUrl = "";
   let icon3DUrl = "";
@@ -59,7 +59,7 @@ export const createTrack = asyncHandler(async (req: Request, res: Response) => {
     icon: iconUrl,
     icon3D: icon3DUrl,
     body,
-    sectionId,
+    section,
   });
   res.status(201).json(formatRes("Track created successfully", { track }));
 });
@@ -68,8 +68,8 @@ export const createTrack = asyncHandler(async (req: Request, res: Response) => {
  * Update track by ID
  */
 export const updateTrack = asyncHandler(async (req: Request, res: Response) => {
-  const { title, body, sectionId } = req.body;
-  let updateData: any = { title, body, sectionId };
+  const { title, body, section } = req.body;
+  let updateData: any = { title, body, section };
 
   if (req.files) {
     const files = req.files as { [fieldname: string]: Express.Multer.File[] };

@@ -13,7 +13,7 @@ const TrackSchema: Schema = new Schema({
   icon: { type: String, required: true },
   icon3D: { type: String, required: true },
   body: { type: String, required: true },
-  sectionId: { type: Schema.Types.ObjectId, ref: "Section", required: true },
+  section: { type: Schema.Types.ObjectId, ref: "Section", required: true },
 });
 
 export default mongoose.model<ITrack>("Track", TrackSchema);
