@@ -46,6 +46,9 @@ app.use(`${API_PREFIX}/message`, MessageRouter);
 app.get("/", (req, res) => {
   res.status(200).json(formatRes("API server is running..."));
 });
+app.get("/test", (req, res) => {
+  res.status(200).json(formatRes("test server is running..."));
+});
 
 // Not-Found
 app.use((req, res, next) => {
