@@ -8,56 +8,63 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
         step((generator = generator.apply(thisArg, _arguments || [])).next());
     });
 };
+var __importDefault = (this && this.__importDefault) || function (mod) {
+    return (mod && mod.__esModule) ? mod : { "default": mod };
+};
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.sendForgotPasswordEmail = exports.sendVerificationEmail = void 0;
+exports.sendForgotPasswordEmail = exports.sendVerificationEmail = exports.sendEmail = void 0;
 const nodemailer_1 = require("nodemailer");
-const html_to_text_1 = require("html-to-text");
+const path_1 = __importDefault(require("path"));
+const fs_1 = __importDefault(require("fs"));
 // Function to create a Nodemailer transporter with Gmail settings
 const createTransporter = () => {
     return (0, nodemailer_1.createTransport)({
-        service: "gmail", // Using Gmail as the email service
+        service: "gmail",
         auth: {
-            user: process.env.EMAIL_USER, // Your Gmail username (email address)
-            pass: process.env.EMAIL_PASS, // Your Gmail password or app password
+            user: process.env.EMAIL_USER,
+            pass: process.env.EMAIL_PASS,
         },
         tls: {
-            rejectUnauthorized: false, //This is not recommended for production
+            rejectUnauthorized: true,
         },
     });
 };
 // Generic function to send emails
 const sendEmail = (to, subject, html) => __awaiter(void 0, void 0, void 0, function* () {
     const mailOptions = {
-        from: `langu speak <${process.env.EMAIL_USER}>`, // Sender address
-        to, // Recipient address
-        subject, // Email subject
-        html, // HTML body of the email
-        text: (0, html_to_text_1.htmlToText)(html), // Plain text version of the email (important for email clients that don't support HTML)
+        from: `Smart Path <${process.env.EMAIL_USER}>`,
+        to,
+        subject,
+        html,
+        text: html,
     };
     // Send the email using the created transporter
     return yield createTransporter().sendMail(mailOptions);
 });
+exports.sendEmail = sendEmail;
 // Function to send email verification OTP
-const sendVerificationEmail = (email, otp) => __awaiter(void 0, void 0, void 0, function* () {
-    // HTML content of the verification email with the OTP
-    const html = `
-    <div>
-     <h1>Verify Your Email</h1>
-     <p>Your OTP is: <b>${otp}</b> </p>
-    </div>  
-  `;
-    yield sendEmail(email, "Verify your email", html); // Call the generic sendEmail function
+const sendVerificationEmail = (name, email, otp) => __awaiter(void 0, void 0, void 0, function* () {
+    const templatePath = path_1.default.join(__dirname, "..", "templates", "otp-verify.html");
+    let html = fs_1.default.readFileSync(templatePath, "utf8");
+    const otpAsHtml = otp
+        .split("")
+        .map((num) => {
+        return `<td class="otp-cell-wrapper"><div class="otp-cell">${num}</div></td>`;
+    })
+        .join("");
+    html = html.replace("USER_NAME", name);
+    html = html.replace(`<tr id="OTP_TR"></tr>`, `<tr id="OTP_TR">${otpAsHtml}</tr>`);
+    yield (0, exports.sendEmail)(email, "Verify your email", html);
 });
 exports.sendVerificationEmail = sendVerificationEmail;
 // Function to send forgot password email with OTP
 const sendForgotPasswordEmail = (email, otp) => __awaiter(void 0, void 0, void 0, function* () {
-    // HTML content of the forgot password email with the OTP
     const html = `
     <div>
      <h1>Reset Your Password</h1>
         <p>Your OTP is: <b>${otp}</b> </p>
     </div>
   `;
-    yield sendEmail(email, "Reset your password", html); // Call the generic sendEmail function
+    yield (0, exports.sendEmail)(email, "Reset your password", html);
 });
 exports.sendForgotPasswordEmail = sendForgotPasswordEmail;

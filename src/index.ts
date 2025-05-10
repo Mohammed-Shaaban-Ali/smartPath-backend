@@ -2,27 +2,37 @@ import dotenv from "dotenv";
 import mongoose from "mongoose";
 import app from "./app";
 import AppError from "./utils/app-error.util";
-// const cloudinary = require("cloudinary").v2;
+import http from "http";
+import { setupSocket } from "./config/socket";
 
 dotenv.config();
 const PORT = process.env.PORT as string;
 const MONGO_URI = process.env.MONGO_URI as string;
+const SOCKETPORT = process.env.SOCKETPORT || 8000;
 
-// cloudinary configuration
-// cloudinary.config({
-//   cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
-//   api_key: process.env.CLOUDINARY_API_KEY,
-//   api_secret: process.env.CLOUDINARY_API_SECRET,
-// });
+// Create the HTTP server
+const server = http.createServer(app);
+
+// Set up socket.io
+setupSocket(server);
+
 // DB connection
 mongoose
   .connect(MONGO_URI)
-  .then(() => console.log("DB is connected"))
-  .catch(() => {
-    throw new AppError("DB Can't connect", 500);
+  .then(() => {
+    console.log("DB is connected");
+
+    // Start the server (both HTTP and Socket.io)
+    server.listen(SOCKETPORT, () =>
+      console.log(`✅ Socket Server running on http://localhost:${SOCKETPORT}`)
+    );
+  })
+  .catch((err) => {
+    console.error("DB connection error:", err);
+    throw new AppError("DB can't connect", 500);
   });
 
-// Start the server
+// Start the Express app (HTTP server)
 app.listen(PORT, () => {
   console.log(`Server running on http://localhost:${PORT}`);
 });

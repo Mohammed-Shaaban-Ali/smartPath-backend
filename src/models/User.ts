@@ -5,7 +5,6 @@ export interface IUser extends Document {
   _id: mongoose.Types.ObjectId;
   name: string;
   email: string;
-  facebookId?: string;
   googleId?: string;
   password?: string;
   isVerified?: boolean;
@@ -21,11 +20,6 @@ const UserSchema: Schema = new Schema(
     name: {
       type: String,
       required: true,
-    },
-    facebookId: {
-      type: String,
-      unique: true,
-      sparse: true,
     },
     googleId: {
       type: String,

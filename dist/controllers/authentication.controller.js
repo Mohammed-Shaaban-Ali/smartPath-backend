@@ -23,13 +23,12 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.deleteUserByEmailController = exports.resetPasswordController = exports.forgotPasswordController = exports.socialMediaController = exports.loginController = exports.resendOtpController = exports.verifyEmailController = exports.registerController = void 0;
+exports.verifyOTPPasswordController = exports.forgotPasswordController = exports.socialMediaController = exports.loginController = exports.resendOtpController = exports.verifyEmailController = exports.registerController = void 0;
 const format_res_util_1 = __importDefault(require("../utils/format-res.util"));
 const app_error_util_1 = __importDefault(require("../utils/app-error.util"));
 const bcrypt_1 = __importDefault(require("bcrypt"));
 const authentication_service_1 = require("../services/authentication.service");
 const sign_token_util_1 = require("../utils/sign-token.util");
-const User_1 = __importDefault(require("../models/User"));
 const otp_generator_util_1 = require("../utils/otp-generator.util");
 const otp_expiration_util_1 = require("../utils/otp-expiration.util");
 const send_email_util_1 = require("../utils/send-email.util");
@@ -68,10 +67,11 @@ const registerController = (req, res, next) => __awaiter(void 0, void 0, void 0,
             otpExpiration,
         });
         // Send verification email
-        yield (0, send_email_util_1.sendVerificationEmail)(email, otp);
+        yield (0, send_email_util_1.sendVerificationEmail)(name, email, otp);
         // Send success response
         res.status(200).json((0, format_res_util_1.default)("Please verify your email with the sent OTP", {
             email,
+            otp,
             message: "Verification email sent",
         }));
     }
@@ -95,9 +95,10 @@ const verifyEmailController = (req, res, next) => __awaiter(void 0, void 0, void
             throw new app_error_util_1.default("No pending verification found for this email", 404);
         }
         // Validate OTP and expiration
-        if (pendingUser.otp !== otp || (0, otp_expiration_util_1.isOtpExpired)(pendingUser.otpExpiration)) {
-            throw new app_error_util_1.default("Invalid OTP or OTP has expired", 400);
-        }
+        if (pendingUser.otp !== otp)
+            throw new app_error_util_1.default("Invalid OTP", 400);
+        if ((0, otp_expiration_util_1.isOtpExpired)(pendingUser.otpExpiration))
+            throw new app_error_util_1.default("OTP has been expired", 400);
         // Create the verified user in database
         const newUser = {
             name: pendingUser.name,
@@ -108,7 +109,10 @@ const verifyEmailController = (req, res, next) => __awaiter(void 0, void 0, void
         // Save user to database
         const createdUser = yield (0, authentication_service_1.createUser)(newUser);
         // Generate JWT token
-        const token = (0, sign_token_util_1.signToken)({ userId: createdUser.id });
+        const token = (0, sign_token_util_1.signToken)({
+            userId: createdUser.id,
+            email: createdUser.email,
+        });
         // Remove from pending users
         pendingUsers.delete(email);
         // Send success response
@@ -142,8 +146,10 @@ const resendOtpController = (req, res, next) => __awaiter(void 0, void 0, void 0
         if (pendingUser) {
             // Update pending user data with new OTP
             pendingUsers.set(email, Object.assign(Object.assign({}, pendingUser), { otp: newOtp, otpExpiration: newOtpExpiration }));
+            console.log("pendingUser", pendingUser);
             // Send new verification email
-            yield (0, send_email_util_1.sendVerificationEmail)(email, newOtp);
+            yield (0, send_email_util_1.sendVerificationEmail)(user === null || user === void 0 ? void 0 : user.name, email, newOtp);
+            console.log("sendVerificationEmail");
         }
         else if (user) {
             // Update user in database with new OTP
@@ -186,8 +192,11 @@ const loginController = (req, res, next) => __awaiter(void 0, void 0, void 0, fu
         }
         // Compare the password with the hashed password
         const isPasswordValid = yield bcrypt_1.default.compare(password, user.password);
+        if (!isPasswordValid) {
+            throw new app_error_util_1.default("Invalid credentials", 401);
+        }
         // Generate JWT token
-        const token = (0, sign_token_util_1.signToken)({ userId: user.id });
+        const token = (0, sign_token_util_1.signToken)({ userId: user.id, email: user.email });
         // Remove sensitive data (password, OTP) from the user object before sending
         const _a = user.toObject(), { password: storedPassword, otp, otpExpiration } = _a, loginedUser = __rest(_a, ["password", "otp", "otpExpiration"]);
         // Send success response
@@ -204,7 +213,8 @@ exports.loginController = loginController;
 const socialMediaController = (req, res, next) => {
     try {
         const user = req.user;
-        const token = (0, sign_token_util_1.signToken)({ userId: user._id });
+        // console.log(user, "socialMediaController ");
+        const token = (0, sign_token_util_1.signToken)({ userId: user._id.toString(), email: user.email });
         res.json((0, format_res_util_1.default)("User authenticated successfully", { token, user }));
     }
     catch (err) {
@@ -226,6 +236,7 @@ const forgotPasswordController = (req, res, next) => __awaiter(void 0, void 0, v
         // Store OTP and expiration on the user object
         user.otp = otp;
         user.otpExpiration = otpExpiration;
+        user.isVerifiedotp = false; // Set to unverified
         yield user.save();
         // Send forgot password email
         yield (0, send_email_util_1.sendForgotPasswordEmail)(email, otp);
@@ -237,7 +248,7 @@ const forgotPasswordController = (req, res, next) => __awaiter(void 0, void 0, v
     }
 });
 exports.forgotPasswordController = forgotPasswordController;
-const resetPasswordController = (req, res, next) => __awaiter(void 0, void 0, void 0, function* () {
+const verifyOTPPasswordController = (req, res, next) => __awaiter(void 0, void 0, void 0, function* () {
     try {
         const { email, otp } = req.body;
         // Find the user by email
@@ -248,6 +259,9 @@ const resetPasswordController = (req, res, next) => __awaiter(void 0, void 0, vo
         if (user.otp !== otp || (0, otp_expiration_util_1.isOtpExpired)(user.otpExpiration)) {
             throw new app_error_util_1.default("Invalid OTP or OTP has Expired", 400);
         }
+        user.isVerifiedotp = true; // Set to verified
+        user.updatedAt = new Date(); // Update updatedAt
+        yield user.save();
         // Send success response, indicating that OTP is valid
         res.status(200).json((0, format_res_util_1.default)("OTP Verified Successfully", {
             email,
@@ -258,19 +272,4 @@ const resetPasswordController = (req, res, next) => __awaiter(void 0, void 0, vo
         next(err);
     }
 });
-exports.resetPasswordController = resetPasswordController;
-const deleteUserByEmailController = (req, res, next) => __awaiter(void 0, void 0, void 0, function* () {
-    const { email } = req.body;
-    try {
-        // Find and delete the user by email
-        const user = yield User_1.default.findOneAndDelete({ email });
-        if (!user)
-            throw new app_error_util_1.default("User not found", 400);
-        // Send success response
-        res.status(200).json((0, format_res_util_1.default)("User deleted successfully", {}));
-    }
-    catch (err) {
-        next(err);
-    }
-});
-exports.deleteUserByEmailController = deleteUserByEmailController;
+exports.verifyOTPPasswordController = verifyOTPPasswordController;

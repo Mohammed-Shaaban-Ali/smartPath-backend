@@ -29,7 +29,7 @@ exports.getUserByEmail = getUserByEmail;
 // Creates a new user in the database.
 const createUser = (userData) => __awaiter(void 0, void 0, void 0, function* () {
     try {
-        if (!userData.email || !userData.password) {
+        if (!userData.email) {
             throw new app_error_util_1.default("Missing required fields", 400);
         }
         const user = new User_1.default(userData);

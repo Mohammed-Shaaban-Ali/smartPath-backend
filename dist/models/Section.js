@@ -34,42 +34,9 @@ var __importStar = (this && this.__importStar) || (function () {
 })();
 Object.defineProperty(exports, "__esModule", { value: true });
 const mongoose_1 = __importStar(require("mongoose"));
-const UserSchema = new mongoose_1.Schema({
-    name: {
-        type: String,
-        required: true,
-    },
-    googleId: {
-        type: String,
-        unique: true,
-        sparse: true,
-    },
-    email: {
-        type: String,
-        required: true,
-        unique: true,
-        trim: true,
-        lowercase: true,
-    },
-    password: {
-        type: String,
-    },
-    isVerified: {
-        type: Boolean,
-        default: false,
-    },
-    isVerifiedotp: {
-        type: Boolean,
-        default: false,
-    },
-    otp: {
-        type: String,
-    },
-    otpExpiration: {
-        type: Date,
-    },
-}, {
-    timestamps: true,
+const SectionSchema = new mongoose_1.Schema({
+    title: { type: String, required: true },
+    icon: { type: String, required: true },
+    body: { type: String, required: true },
 });
-const User = mongoose_1.default.model("User", UserSchema);
-exports.default = User;
+exports.default = mongoose_1.default.model("Section", SectionSchema);
