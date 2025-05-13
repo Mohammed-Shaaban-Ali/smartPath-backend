@@ -3,6 +3,7 @@ export interface UserDTO {
   email?: string;
   password?: string;
   avatar?: string;
+
   facebookId?: string;
   googleId?: string;
 }

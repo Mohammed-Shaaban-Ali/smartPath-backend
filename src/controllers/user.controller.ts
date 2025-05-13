@@ -10,7 +10,7 @@ import AppError from "../utils/app-error.util";
 import type { UserDTO } from "../types/dtos/user.dto";
 import { getUserByEmail } from "../services/authentication.service";
 import { AuthRequest } from "../middlewares/authentication.middleware";
-import { IUser } from "../models/User";
+import cloudinary from "../config/cloudinary";
 export const updateUserController = async (
   req: AuthRequest,
   res: Response,
@@ -20,6 +20,15 @@ export const updateUserController = async (
     const userId = req.userId as string;
 
     const updateData: Partial<UserDTO> = req.body; // Use Partial to allow optional fields
+
+    // Upload new image if provided
+    if (req.file) {
+      const result = await cloudinary.uploader.upload(req.file.path, {
+        folder: "users",
+        resource_type: "image",
+      });
+      updateData.avatar = result.secure_url;
+    }
 
     // Check if the user is trying to update the password
     if (updateData.password) {
@@ -39,7 +48,8 @@ export const updateUserController = async (
     const updatedUser = await updateUser(userId, updateData);
 
     // Remove the password from the response
-    const { password, ...userWithoutPassword } = updatedUser.toObject();
+    const { password, progress, enrolledCourses, ...userWithoutPassword } =
+      updatedUser.toObject();
 
     res
       .status(200)

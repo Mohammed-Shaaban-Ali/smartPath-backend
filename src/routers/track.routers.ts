@@ -1,6 +1,5 @@
 import { Router } from "express";
 
-import upload from "../middlewares/upload"; // Multer middleware for file upload
 import {
   getTracks,
   getTrackById,
@@ -8,6 +7,7 @@ import {
   updateTrack,
   deleteTrack,
 } from "../controllers/track.controller";
+import { uploadImage } from "../middlewares/upload";
 
 const router = Router();
 
@@ -15,7 +15,7 @@ router.get("/", getTracks);
 router.get("/:id", getTrackById);
 router.post(
   "/",
-  upload.fields([
+  uploadImage.fields([
     { name: "icon", maxCount: 1 },
     { name: "icon3D", maxCount: 1 },
   ]),
@@ -23,7 +23,7 @@ router.post(
 );
 router.put(
   "/:id",
-  upload.fields([
+  uploadImage.fields([
     { name: "icon", maxCount: 1 },
     { name: "icon3D", maxCount: 1 },
   ]),

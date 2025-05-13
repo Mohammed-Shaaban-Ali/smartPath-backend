@@ -12,6 +12,7 @@ import {
   sendVerificationEmail,
   sendForgotPasswordEmail,
 } from "../utils/send-email.util";
+import cloudinary from "../config/cloudinary";
 
 // Store temporary user data while waiting for verification
 const pendingUsers = new Map<
@@ -19,6 +20,7 @@ const pendingUsers = new Map<
   {
     name: string;
     email: string;
+    avatar: string;
     password: string;
     otp: string;
     otpExpiration: Date;
@@ -48,6 +50,17 @@ export const registerController = async (
       throw new AppError("User is pending email verification", 400);
     }
 
+    // image
+    let imageUrl = "";
+    // Upload image if available
+    if (req.file) {
+      const result = await cloudinary.uploader.upload(req.file.path, {
+        folder: "users",
+        resource_type: "image",
+      });
+      imageUrl = result.secure_url;
+    }
+
     // Hash the password
     const hashedPassword = await bcrypt.hash(password, 10);
 
@@ -60,6 +73,7 @@ export const registerController = async (
       name,
       email,
       password: hashedPassword,
+      avatar: imageUrl,
       otp,
       otpExpiration,
     });
@@ -109,6 +123,7 @@ export const verifyEmailController = async (
       name: pendingUser.name,
       email: pendingUser.email,
       password: pendingUser.password,
+      avatar: pendingUser.avatar,
       isVerified: true,
     };
 
@@ -131,6 +146,7 @@ export const verifyEmailController = async (
         user: {
           name: createdUser.name,
           email: createdUser.email,
+          avatar: createdUser.avatar,
         },
       })
     );

@@ -6,7 +6,7 @@ import {
   updateRoadmap,
   deleteRoadmap,
 } from "../controllers/roadmap.controller";
-import upload from "../middlewares/upload";
+import { uploadImage } from "../middlewares/upload";
 
 const router = express.Router();
 
@@ -17,10 +17,10 @@ router.get("/", getRoadmaps);
 router.get("/:id", getRoadmapById);
 
 // Create a new roadmap (supports icon upload)
-router.post("/", upload.single("icon"), createRoadmap);
+router.post("/", uploadImage.single("icon"), createRoadmap);
 
 // Update roadmap (supports optional icon update)
-router.put("/:id", upload.single("icon"), updateRoadmap);
+router.put("/:id", uploadImage.single("icon"), updateRoadmap);
 
 // Delete roadmap
 router.delete("/:id", deleteRoadmap);

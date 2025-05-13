@@ -2,33 +2,54 @@ import multer from "multer";
 import { CloudinaryStorage } from "multer-storage-cloudinary";
 import cloudinary from "../config/cloudinary";
 
-// Configure Multer to use Cloudinary
-const storage = new CloudinaryStorage({
+// Storage for images
+const imageStorage = new CloudinaryStorage({
   cloudinary,
   params: async (req, file) => {
     const allowedFormats = ["jpg", "jpeg", "png", "webp", "gif"];
-    const fileFormat = file.mimetype.split("/")[1]; // Extract file format
+    const fileFormat = file.mimetype.split("/")[1];
 
     if (!allowedFormats.includes(fileFormat)) {
       throw new Error(
-        "Invalid file format. Only JPG, PNG, WEBP, and GIF are allowed."
+        "Invalid image format. Only JPG, PNG, WEBP, and GIF are allowed."
       );
     }
 
     return {
-      folder: "sections", // Cloudinary folder name
-      format: fileFormat, // Use the detected file format
-      resource_type: "image", // Ensure it's an image
-      public_id: `${Date.now()}-${file.originalname.replace(/\s/g, "-")}`, // Unique filename
-      transformation: [{ quality: "auto", fetch_format: "auto" }], // Optimize images
+      folder: "sections",
+      format: fileFormat,
+      resource_type: "image",
+      public_id: `${Date.now()}-${file.originalname.replace(/\s/g, "-")}`,
+      transformation: [{ quality: "auto", fetch_format: "auto" }],
     };
   },
 });
 
-// Multer middleware with limits (max file size 5MB)
-const upload = multer({
-  storage,
-  limits: { fileSize: 5 * 1024 * 1024 }, // 5MB file size limit
+// Storage for videos
+const videoStorage = new CloudinaryStorage({
+  cloudinary,
+  params: async (req, file) => {
+    const allowedFormats = ["mp4", "mov", "avi", "mkv"];
+    const fileFormat = file.mimetype.split("/")[1];
+
+    if (!allowedFormats.includes(fileFormat)) {
+      throw new Error(
+        "Invalid video format. Only MP4, MOV, AVI, and MKV are allowed."
+      );
+    }
+
+    return {
+      folder: "course_videos",
+      resource_type: "video",
+      public_id: `${Date.now()}-${file.originalname.replace(/\s/g, "-")}`,
+    };
+  },
+});
+
+// Multer middleware for images (5MB)
+export const uploadImage = multer({
+  storage: imageStorage,
+  limits: { fileSize: 5 * 1024 * 1024 },
   fileFilter: (req, file, cb) => {
     const allowedMimeTypes = [
       "image/jpeg",
@@ -41,11 +62,72 @@ const upload = multer({
     } else {
       cb(
         new Error(
-          "Invalid file type. Only JPG, PNG, WEBP, and GIF are allowed."
+          "Invalid image type. Only JPG, PNG, WEBP, and GIF are allowed."
         )
       );
     }
   },
 });
 
-export default upload;
+// Multer middleware for videos (500MB)
+export const uploadVideo = multer({
+  storage: videoStorage,
+  limits: { fileSize: 500 * 1024 * 1024 },
+  fileFilter: (req, file, cb) => {
+    const allowedMimeTypes = [
+      "video/mp4",
+      "video/quicktime",
+      "video/x-msvideo",
+      "video/x-matroska",
+    ];
+    if (allowedMimeTypes.includes(file.mimetype)) {
+      cb(null, true);
+    } else {
+      cb(
+        new Error(
+          "Invalid video type. Only MP4, MOV, AVI, and MKV are allowed."
+        )
+      );
+    }
+  },
+});
+export const uploadAny = multer({
+  storage: new CloudinaryStorage({
+    cloudinary,
+    params: async (req, file) => {
+      const isImage = file.mimetype.startsWith("image/");
+      const isVideo = file.mimetype.startsWith("video/");
+
+      if (isImage) {
+        const allowedFormats = ["jpg", "jpeg", "png", "webp", "gif"];
+        const fileFormat = file.mimetype.split("/")[1];
+        if (!allowedFormats.includes(fileFormat)) {
+          throw new Error("Invalid image format.");
+        }
+
+        return {
+          folder: "sections",
+          format: fileFormat,
+          resource_type: "image",
+          public_id: `${Date.now()}-${file.originalname.replace(/\s/g, "-")}`,
+          transformation: [{ quality: "auto", fetch_format: "auto" }],
+        };
+      } else if (isVideo) {
+        const allowedFormats = ["mp4", "mov", "avi", "mkv"];
+        const fileFormat = file.mimetype.split("/")[1];
+        if (!allowedFormats.includes(fileFormat)) {
+          throw new Error("Invalid video format.");
+        }
+
+        return {
+          folder: "course_videos",
+          resource_type: "video",
+          public_id: `${Date.now()}-${file.originalname.replace(/\s/g, "-")}`,
+        };
+      } else {
+        throw new Error("Unsupported file type.");
+      }
+    },
+  }),
+  limits: { fileSize: 500 * 1024 * 1024 },
+});

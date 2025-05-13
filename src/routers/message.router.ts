@@ -1,11 +1,11 @@
 import express from "express";
 
-import upload from "../middlewares/upload";
 import { getAllMessages, sendMessage } from "../controllers/message.controller";
 import { authMiddleware } from "../middlewares/authentication.middleware";
+import { uploadImage } from "../middlewares/upload";
 
 const router = express.Router();
-router.post("/", authMiddleware, upload.single("image"), sendMessage);
+router.post("/", authMiddleware, uploadImage.single("image"), sendMessage);
 router.get("/", authMiddleware, getAllMessages);
 
 export default router;

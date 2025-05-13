@@ -9,11 +9,12 @@ import {
   resendOtpController,
 } from "../controllers/authentication.controller";
 import passport from "passport";
+import { uploadImage } from "../middlewares/upload";
 
 const router = Router();
 
 // register
-router.post("/register", registerController);
+router.post("/register", uploadImage.single("avatar"), registerController);
 
 // login
 router.post("/login", loginController);

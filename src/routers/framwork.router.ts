@@ -6,7 +6,7 @@ import {
   updateFramework,
   deleteFramework,
 } from "../controllers/framework.controller";
-import upload from "../middlewares/upload";
+import { uploadImage } from "../middlewares/upload";
 
 const router = express.Router();
 
@@ -19,7 +19,7 @@ router.get("/:id", getFrameworkById);
 // Create a new framework (supports icon and icon3D)
 router.post(
   "/",
-  upload.fields([
+  uploadImage.fields([
     { name: "icon", maxCount: 1 },
     { name: "icon3D", maxCount: 1 },
   ]),
@@ -29,7 +29,7 @@ router.post(
 // Update framework (supports optional icon and icon3D update)
 router.put(
   "/:id",
-  upload.fields([
+  uploadImage.fields([
     { name: "icon", maxCount: 1 },
     { name: "icon3D", maxCount: 1 },
   ]),

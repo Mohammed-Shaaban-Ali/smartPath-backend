@@ -6,7 +6,7 @@ import {
   updateBlog,
   deleteBlog,
 } from "../controllers/blog.controller";
-import upload from "../middlewares/upload";
+import { uploadImage } from "../middlewares/upload";
 
 const router = express.Router();
 
@@ -17,10 +17,10 @@ router.get("/", getBlogs);
 router.get("/:id", getBlogById);
 
 // Create a new blog (supports image upload)
-router.post("/", upload.single("image"), createBlog);
+router.post("/", uploadImage.single("image"), createBlog);
 
 // Update blog (supports optional image update)
-router.put("/:id", upload.single("image"), updateBlog);
+router.put("/:id", uploadImage.single("image"), updateBlog);
 
 // Delete blog
 router.delete("/:id", deleteBlog);
