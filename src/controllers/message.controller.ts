@@ -2,18 +2,16 @@ import { Response, NextFunction } from "express";
 import Message from "../models/Message";
 import { AuthRequest } from "../middlewares/authentication.middleware";
 import cloudinary from "../config/cloudinary";
+import asyncHandler from "../utils/async-handler.util";
+import formatRes from "../utils/format-res.util";
 
-export const sendMessage = async (
-  req: AuthRequest,
-  res: Response,
-  next: NextFunction
-) => {
-  try {
-    const { content } = req.body;
+export const sendMessage = asyncHandler(
+  async (req: AuthRequest, res: Response, next: NextFunction) => {
+    const { message } = req.body;
     const sender = req.userId;
 
-    if (!content) {
-      res.status(400).json({ message: "Content is required." });
+    if (!message) {
+      res.status(400).json(formatRes("message is required."));
       return;
     }
 
@@ -28,32 +26,46 @@ export const sendMessage = async (
       imageUrl = result.secure_url;
     }
 
-    const message = await Message.create({
+    const newMessage = await Message.create({
       sender,
-      content,
+      content: message,
       image: imageUrl,
     });
 
-    const populatedMessage = await message.populate("sender", "name");
+    const populatedMessage = await newMessage.populate("sender", "name");
 
-    res.status(201).json(populatedMessage);
-  } catch (error) {
-    next(error);
+    res
+      .status(201)
+      .json(
+        formatRes("Message sent successfully", { message: populatedMessage })
+      );
   }
-};
+);
 
-export const getAllMessages = async (
-  req: AuthRequest, // Use the extended `AuthRequest` type here if `userId` is needed
-  res: Response,
-  next: NextFunction
-) => {
-  try {
-    const messages = await Message.find({ sender: req.userId }) // Optional: Filtering based on the userId
-      .populate("sender", "name")
-      .sort({ createdAt: 1 });
+export const getAllMessages = asyncHandler(
+  async (req: AuthRequest, res: Response, next: NextFunction) => {
+    const { limit = 20, lastMessageId } = req.query;
 
-    res.status(200).json(messages);
-  } catch (error) {
-    next(error);
+    const query: any = {
+      sender: req.userId,
+    };
+
+    if (lastMessageId) {
+      const lastMessage = await Message.findById(lastMessageId);
+      if (lastMessage) {
+        query.createdAt = { $lt: lastMessage.createdAt };
+      }
+    }
+
+    const messages = await Message.find(query)
+      .populate("sender", "name avatar")
+      .sort({ createdAt: -1 }) // latest messages first
+      .limit(Number(limit));
+
+    res.status(200).json(
+      formatRes("Messages fetched successfully", {
+        messages,
+      })
+    );
   }
-};
+);
