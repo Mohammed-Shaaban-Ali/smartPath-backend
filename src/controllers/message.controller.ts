@@ -46,20 +46,19 @@ export const getAllMessages = asyncHandler(
   async (req: AuthRequest, res: Response, next: NextFunction) => {
     const { limit = 20, lastMessageId } = req.query;
 
-    const query: any = {
-      sender: req.userId,
-    };
+    let query: any = {};
 
     if (lastMessageId) {
       const lastMessage = await Message.findById(lastMessageId);
       if (lastMessage) {
+        // Get all messages before lastMessage
         query.createdAt = { $lt: lastMessage.createdAt };
       }
     }
 
     const messages = await Message.find(query)
       .populate("sender", "name avatar")
-      .sort({ createdAt: -1 }) // latest messages first
+      .sort({ createdAt: -1 }) // newest first
       .limit(Number(limit));
 
     res.status(200).json(

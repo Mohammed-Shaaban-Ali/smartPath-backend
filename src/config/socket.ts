@@ -33,7 +33,10 @@ export const setupSocket = (server: http.Server) => {
           image: imageUrl,
         });
 
-        const populatedMessage = await message.populate("sender", "name");
+        const populatedMessage = await message.populate(
+          "sender",
+          "name avatar"
+        );
 
         io.emit("newMessage", populatedMessage);
       } catch (error) {
