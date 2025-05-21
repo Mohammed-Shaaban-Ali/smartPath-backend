@@ -13,8 +13,10 @@ import trackRouter from "./routers/track.routers";
 import framworkRouter from "./routers/framwork.router";
 import roadmapRouter from "./routers/roadmap.router";
 import blogRouter from "./routers/blog.router";
+import GroupRouter from "./routers/group.router";
 import MessageRouter from "./routers/message.router";
 import CoursesRouter from "./routers/courses.router";
+
 import passport from "passport";
 import { configurePassport } from "./utils/passport-setup.util";
 
@@ -42,6 +44,7 @@ app.use(`${API_PREFIX}/framwork`, framworkRouter);
 app.use(`${API_PREFIX}/roadmap`, roadmapRouter);
 app.use(`${API_PREFIX}/blog`, blogRouter);
 app.use(`${API_PREFIX}/message`, MessageRouter);
+app.use(`${API_PREFIX}/group`, GroupRouter);
 app.use(`${API_PREFIX}/courses`, CoursesRouter);
 
 // Base route

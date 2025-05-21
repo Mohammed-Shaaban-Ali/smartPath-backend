@@ -2,6 +2,7 @@ import mongoose, { Schema, Document } from "mongoose";
 
 export interface IMessage extends Document {
   sender: mongoose.Types.ObjectId;
+  group: mongoose.Types.ObjectId;
   content: string;
   image?: string;
   createdAt: Date;
@@ -15,6 +16,11 @@ const MessageSchema: Schema = new Schema(
       ref: "User",
       required: true,
     },
+    group: {
+      type: Schema.Types.ObjectId,
+      ref: "Group",
+      required: true,
+    },
     image: { type: String, default: null },
     content: {
       type: String,
@@ -23,9 +29,7 @@ const MessageSchema: Schema = new Schema(
       },
     },
   },
-  {
-    timestamps: true,
-  }
+  { timestamps: true }
 );
 
 const Message = mongoose.model<IMessage>("Message", MessageSchema);

@@ -4,14 +4,27 @@ import { AuthRequest } from "../middlewares/authentication.middleware";
 import cloudinary from "../config/cloudinary";
 import asyncHandler from "../utils/async-handler.util";
 import formatRes from "../utils/format-res.util";
+import Group from "../models/Group";
 
+// ✅ Send Message (HTTP)
 export const sendMessage = asyncHandler(
   async (req: AuthRequest, res: Response, next: NextFunction) => {
-    const { message } = req.body;
+    const { message, groupId } = req.body;
     const sender = req.userId;
 
-    if (!message) {
-      res.status(400).json(formatRes("message is required."));
+    if (!message && !req.file) {
+      res.status(400).json(formatRes("Message content or image is required."));
+      return;
+    }
+
+    if (!groupId) {
+      res.status(400).json(formatRes("groupId is required."));
+      return;
+    }
+
+    const groupExists = await Group.findById(groupId);
+    if (!groupExists) {
+      res.status(404).json(formatRes("Group not found."));
       return;
     }
 
@@ -29,10 +42,11 @@ export const sendMessage = asyncHandler(
     const newMessage = await Message.create({
       sender,
       content: message,
+      group: groupId,
       image: imageUrl,
     });
 
-    const populatedMessage = await newMessage.populate("sender", "name");
+    const populatedMessage = await newMessage.populate("sender", "name avatar");
 
     res
       .status(201)
@@ -42,23 +56,34 @@ export const sendMessage = asyncHandler(
   }
 );
 
+// ✅ Get All Messages of a Group
 export const getAllMessages = asyncHandler(
   async (req: AuthRequest, res: Response, next: NextFunction) => {
-    const { limit = 20, lastMessageId } = req.query;
+    const { groupId, limit = 20, lastMessageId } = req.query;
 
-    let query: any = {};
+    if (!groupId) {
+      res.status(400).json(formatRes("groupId is required."));
+      return;
+    }
+
+    const groupExists = await Group.findById(groupId);
+    if (!groupExists) {
+      res.status(404).json(formatRes("Group not found."));
+      return;
+    }
+
+    let query: any = { group: groupId };
 
     if (lastMessageId) {
       const lastMessage = await Message.findById(lastMessageId);
       if (lastMessage) {
-        // Get all messages before lastMessage
         query.createdAt = { $lt: lastMessage.createdAt };
       }
     }
 
     const messages = await Message.find(query)
       .populate("sender", "name avatar")
-      .sort({ createdAt: -1 }) // newest first
+      .sort({ createdAt: -1 })
       .limit(Number(limit));
 
     res.status(200).json(
@@ -66,5 +91,29 @@ export const getAllMessages = asyncHandler(
         messages,
       })
     );
+  }
+);
+
+// ✅ Delete a Message (Optional)
+export const deleteMessage = asyncHandler(
+  async (req: AuthRequest, res: Response, next: NextFunction) => {
+    const { messageId } = req.params;
+
+    const message = await Message.findById(messageId);
+
+    if (!message) {
+      res.status(404).json(formatRes("Message not found."));
+      return;
+    }
+
+    // Allow only sender to delete
+    if (message.sender.toString() !== req.userId) {
+      res.status(403).json(formatRes("Not authorized to delete this message."));
+      return;
+    }
+
+    await message.deleteOne();
+
+    res.status(200).json(formatRes("Message deleted successfully."));
   }
 );
