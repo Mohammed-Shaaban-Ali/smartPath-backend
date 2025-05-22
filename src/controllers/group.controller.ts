@@ -3,27 +3,38 @@ import Group from "../models/Group";
 import { AuthRequest } from "../middlewares/authentication.middleware";
 import asyncHandler from "../utils/async-handler.util";
 import formatRes from "../utils/format-res.util";
+import cloudinary from "../config/cloudinary";
 
 // ✅ Create Group
 export const createGroup = asyncHandler(
   async (req: AuthRequest, res: Response, next: NextFunction) => {
     const { name } = req.body;
+    const createdBy = req.userId;
 
     if (!name) {
       res.status(400).json(formatRes("Group name is required."));
       return;
     }
 
-    // Check if group name already exists
     const existingGroup = await Group.findOne({ name });
     if (existingGroup) {
       res.status(400).json(formatRes("Group name already exists."));
       return;
     }
 
+    let imageUrl: string | null = null;
+    if (req.file) {
+      const result = await cloudinary.uploader.upload(req.file.path, {
+        folder: "groups",
+        resource_type: "image",
+      });
+      imageUrl = result.secure_url;
+    }
+
     const newGroup = await Group.create({
       name,
-      createdBy: req.userId,
+      image: imageUrl,
+      createdBy,
     });
 
     res
@@ -35,12 +46,23 @@ export const createGroup = asyncHandler(
 // ✅ Get All Groups
 export const getAllGroups = asyncHandler(
   async (req: AuthRequest, res: Response, next: NextFunction) => {
-    // i want only return _id , name and createdBy
-    const groups = await Group.find({}, { _id: 1, name: 1, createdBy: 1 })
+    const groups = await Group.find()
       .populate("createdBy", "name avatar")
       .sort({ createdAt: -1 });
 
-    res.status(200).json(formatRes("Groups fetched successfully.", { groups }));
+    const formattedGroups = groups.map((group) => ({
+      _id: group._id,
+      name: group.name,
+      image: group.image,
+      createdBy: group.createdBy,
+      createdAt: group.createdAt,
+    }));
+
+    res
+      .status(200)
+      .json(
+        formatRes("Groups fetched successfully.", { groups: formattedGroups })
+      );
   }
 );
 

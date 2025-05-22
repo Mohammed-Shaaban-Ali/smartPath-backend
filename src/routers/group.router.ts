@@ -6,12 +6,12 @@ import {
   deleteGroup,
 } from "../controllers/group.controller";
 import { authMiddleware } from "../middlewares/authentication.middleware";
+import { uploadImage } from "../middlewares/upload";
 
 const router = express.Router();
 
 // ✅ Create new group
-router.post("/", authMiddleware, createGroup);
-
+router.post("/", authMiddleware, uploadImage.single("image"), createGroup);
 // ✅ Get all groups
 router.get("/", authMiddleware, getAllGroups);
 
