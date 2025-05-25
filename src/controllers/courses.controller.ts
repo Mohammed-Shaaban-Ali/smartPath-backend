@@ -6,6 +6,7 @@ import asyncHandler from "../utils/async-handler.util";
 import { AuthRequest } from "../middlewares/authentication.middleware";
 import mongoose from "mongoose";
 import Track from "../models/Track";
+import { paginateArray } from "../utils/paginate";
 
 // types
 interface Video {
@@ -117,22 +118,52 @@ export const createCourse = async (
 
 // Get All Courses
 export const getCourses = asyncHandler(async (req: Request, res: Response) => {
-  const courses = await Course.find()
-    .select("title image description totalDuration ratings track")
-    .populate({
-      path: "track",
-      select: "title",
-    })
-    .lean();
+  const { search } = req.query;
+  const page = parseInt(req.query.page as string, 10) || 1;
+  const limit = parseInt(req.query.limit as string, 10) || 10;
+  const searchRegex = search ? new RegExp(search as string, "i") : null;
 
-  // احسب متوسط التقييم لكل كورس
+  const courses = await Course.aggregate([
+    {
+      $lookup: {
+        from: "tracks",
+        localField: "track",
+        foreignField: "_id",
+        as: "track",
+      },
+    },
+    { $unwind: "$track" },
+    {
+      $match: searchRegex
+        ? {
+            $or: [
+              { title: searchRegex },
+              { description: searchRegex },
+              { "track.title": searchRegex },
+            ],
+          }
+        : {},
+    },
+    {
+      $project: {
+        title: 1,
+        image: 1,
+        description: 1,
+        totalDuration: 1,
+        ratings: 1,
+        "track.title": 1,
+      },
+    },
+  ]);
+
   const formattedCourses = courses.map((course) => {
     const ratings = course.ratings || [];
     const averageRating =
       ratings.length > 0
-        ? ratings.reduce((sum, rate) => {
-            return sum + (rate?.rate || 0);
-          }, 0) / ratings.length
+        ? ratings.reduce(
+            (sum: number, rate: any) => sum + (rate?.rate || 0),
+            0
+          ) / ratings.length
         : 0;
 
     return {
@@ -141,14 +172,14 @@ export const getCourses = asyncHandler(async (req: Request, res: Response) => {
       image: course.image,
       description: course.description,
       totalDuration: course.totalDuration,
-      averageRating: averageRating.toFixed(1), // رقم عشري واحد
+      averageRating: averageRating.toFixed(1),
       track: course.track,
     };
   });
-
+  const coursesWithPageination = paginateArray(formattedCourses, page, limit);
   res.status(200).json(
     formatRes("Courses fetched successfully", {
-      courses: formattedCourses,
+      coursesWithPageination,
     })
   );
 });
