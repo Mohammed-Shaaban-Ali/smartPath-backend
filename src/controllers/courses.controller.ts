@@ -5,6 +5,7 @@ import formatRes from "../utils/format-res.util";
 import asyncHandler from "../utils/async-handler.util";
 import { AuthRequest } from "../middlewares/authentication.middleware";
 import mongoose from "mongoose";
+import Track from "../models/Track";
 
 // types
 interface Video {
@@ -28,6 +29,7 @@ interface CreateCourseRequest extends Request {
     title: string;
     description: string;
     sections: string;
+    track: string; // Assuming track is a string ID
   };
 }
 
@@ -38,7 +40,17 @@ export const createCourse = async (
   next: NextFunction
 ) => {
   try {
-    const { title, description, sections } = req.body;
+    const { title, description, sections, track } = req.body;
+    if (!title || !description || !sections || !track) {
+      return res.status(400).json(formatRes("All fields are required"));
+    }
+
+    // Check if track exists
+    const trackExists = await Track.findById(track);
+    if (!trackExists) {
+      return res.status(404).json(formatRes("Track not found"));
+    }
+
     let imageUrl;
     let videoUrl: string[] = [];
     (req.files as Express.Multer.File[])?.forEach(
@@ -90,6 +102,7 @@ export const createCourse = async (
       description,
       image: imageUrl, // إضافة رابط الصورة
       totalDuration: totalCourseDuration,
+      track: trackExists._id, // استخدام معرف المسار
       sections: finalSections,
     });
 
@@ -105,7 +118,11 @@ export const createCourse = async (
 // Get All Courses
 export const getCourses = asyncHandler(async (req: Request, res: Response) => {
   const courses = await Course.find()
-    .select("title image description totalDuration ratings")
+    .select("title image description totalDuration ratings track")
+    .populate({
+      path: "track",
+      select: "title",
+    })
     .lean();
 
   // احسب متوسط التقييم لكل كورس
@@ -125,6 +142,7 @@ export const getCourses = asyncHandler(async (req: Request, res: Response) => {
       description: course.description,
       totalDuration: course.totalDuration,
       averageRating: averageRating.toFixed(1), // رقم عشري واحد
+      track: course.track,
     };
   });
 
@@ -196,7 +214,10 @@ export const getCourseWithProgress = asyncHandler(
     const userId = (req as AuthRequest).userId as string;
 
     const user = await User.findById(userId);
-    const course = await Course.findById(courseId);
+    const course = await Course.findById(courseId).populate({
+      path: "track",
+      select: "title",
+    });
 
     if (!user || !course) {
       res.status(404).json(formatRes("User or course not found"));

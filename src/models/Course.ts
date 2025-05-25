@@ -1,4 +1,4 @@
-import mongoose from "mongoose";
+import mongoose, { Schema } from "mongoose";
 
 const videoSchema = new mongoose.Schema({
   title: String,
@@ -17,6 +17,7 @@ const courseSchema = new mongoose.Schema({
   description: String,
   image: String,
   totalDuration: Number,
+  track: { type: Schema.Types.ObjectId, ref: "Track", required: true },
   sections: [sectionSchema],
   ratings: [
     {
