@@ -39,17 +39,18 @@ export const createCourse = async (
   req: CreateCourseRequest,
   res: Response,
   next: NextFunction
-) => {
+): Promise<void> => {
   try {
     const { title, description, sections, track } = req.body;
     if (!title || !description || !sections || !track) {
-      return res.status(400).json(formatRes("All fields are required"));
+      res.status(400).json(formatRes("All fields are required"));
+      return;
     }
 
-    // Check if track exists
     const trackExists = await Track.findById(track);
     if (!trackExists) {
-      return res.status(404).json(formatRes("Track not found"));
+      res.status(404).json(formatRes("Track not found"));
+      return;
     }
 
     let imageUrl;
@@ -67,7 +68,7 @@ export const createCourse = async (
     if (!imageUrl) {
       console.log("Image not uploaded correctly");
     }
-    // Parse sections
+
     const parsedSections: Section[] = JSON.parse(sections);
 
     let totalCourseDuration = 0;
@@ -89,6 +90,7 @@ export const createCourse = async (
           videoUrl: videoUrl[vidIndex] || "",
         };
       });
+
       totalCourseDuration += sectionDuration;
 
       return {
@@ -101,9 +103,9 @@ export const createCourse = async (
     const course = await Course.create({
       title,
       description,
-      image: imageUrl, // إضافة رابط الصورة
+      image: imageUrl,
       totalDuration: totalCourseDuration,
-      track: trackExists._id, // استخدام معرف المسار
+      track: trackExists._id,
       sections: finalSections,
     });
 
@@ -209,7 +211,10 @@ export const getUserCourses = asyncHandler(
       path: "enrolledCourses",
       select: "title description image totalDuration ratings",
     });
-
+    // check if user exists
+    if (!user) {
+      return res.status(404).json(formatRes("User not found"));
+    }
     const formattedCourses = user?.enrolledCourses?.map((course: any) => {
       const ratings = course.ratings || [];
       const averageRating =

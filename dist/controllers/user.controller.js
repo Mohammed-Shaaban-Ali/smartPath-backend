@@ -28,10 +28,19 @@ const user_service_1 = require("../services/user.service");
 const format_res_util_1 = __importDefault(require("../utils/format-res.util"));
 const app_error_util_1 = __importDefault(require("../utils/app-error.util"));
 const authentication_service_1 = require("../services/authentication.service");
+const cloudinary_1 = __importDefault(require("../config/cloudinary"));
 const updateUserController = (req, res, next) => __awaiter(void 0, void 0, void 0, function* () {
     try {
         const userId = req.userId;
         const updateData = req.body; // Use Partial to allow optional fields
+        // Upload new image if provided
+        if (req.file) {
+            const result = yield cloudinary_1.default.uploader.upload(req.file.path, {
+                folder: "users",
+                resource_type: "image",
+            });
+            updateData.avatar = result.secure_url;
+        }
         // Check if the user is trying to update the password
         if (updateData.password) {
             throw new app_error_util_1.default("Password updates must be done through the dedicated update password endpoint.", 400);
@@ -44,7 +53,7 @@ const updateUserController = (req, res, next) => __awaiter(void 0, void 0, void 
         // Update the user with the provided data
         const updatedUser = yield (0, user_service_1.updateUser)(userId, updateData);
         // Remove the password from the response
-        const _a = updatedUser.toObject(), { password } = _a, userWithoutPassword = __rest(_a, ["password"]);
+        const _a = updatedUser.toObject(), { password, progress, enrolledCourses } = _a, userWithoutPassword = __rest(_a, ["password", "progress", "enrolledCourses"]);
         res
             .status(200)
             .json((0, format_res_util_1.default)("User updated successfully", { user: userWithoutPassword }));

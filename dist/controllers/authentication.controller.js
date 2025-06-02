@@ -32,6 +32,7 @@ const sign_token_util_1 = require("../utils/sign-token.util");
 const otp_generator_util_1 = require("../utils/otp-generator.util");
 const otp_expiration_util_1 = require("../utils/otp-expiration.util");
 const send_email_util_1 = require("../utils/send-email.util");
+const cloudinary_1 = __importDefault(require("../config/cloudinary"));
 // Store temporary user data while waiting for verification
 const pendingUsers = new Map();
 // Create a new user in the database
@@ -53,6 +54,16 @@ const registerController = (req, res, next) => __awaiter(void 0, void 0, void 0,
         if (pendingUsers.has(email)) {
             throw new app_error_util_1.default("User is pending email verification", 400);
         }
+        // image
+        let imageUrl = "";
+        // Upload image if available
+        if (req.file) {
+            const result = yield cloudinary_1.default.uploader.upload(req.file.path, {
+                folder: "users",
+                resource_type: "image",
+            });
+            imageUrl = result.secure_url;
+        }
         // Hash the password
         const hashedPassword = yield bcrypt_1.default.hash(password, 10);
         // Generate OTP and expiration
@@ -63,6 +74,7 @@ const registerController = (req, res, next) => __awaiter(void 0, void 0, void 0,
             name,
             email,
             password: hashedPassword,
+            avatar: imageUrl,
             otp,
             otpExpiration,
         });
@@ -104,6 +116,7 @@ const verifyEmailController = (req, res, next) => __awaiter(void 0, void 0, void
             name: pendingUser.name,
             email: pendingUser.email,
             password: pendingUser.password,
+            avatar: pendingUser.avatar,
             isVerified: true,
         };
         // Save user to database
@@ -121,6 +134,7 @@ const verifyEmailController = (req, res, next) => __awaiter(void 0, void 0, void
             user: {
                 name: createdUser.name,
                 email: createdUser.email,
+                avatar: createdUser.avatar,
             },
         }));
     }

@@ -10,12 +10,12 @@ const app_error_util_1 = __importDefault(require("./utils/app-error.util"));
 const http_1 = __importDefault(require("http"));
 const socket_1 = require("./config/socket");
 dotenv_1.default.config();
-const PORT = process.env.PORT;
+// Use environment variables to get the port for both Express and Socket.io
+const PORT = process.env.PORT || 8080; // Default to 8080 if PORT is not set
 const MONGO_URI = process.env.MONGO_URI;
-const SOCKETPORT = process.env.SOCKETPORT || 8000;
-// Create the HTTP server
+// Create the HTTP server for both Express and Socket.io
 const server = http_1.default.createServer(app_1.default);
-// Set up socket.io
+// Set up Socket.io on the same server
 (0, socket_1.setupSocket)(server);
 // DB connection
 mongoose_1.default
@@ -23,13 +23,11 @@ mongoose_1.default
     .then(() => {
     console.log("DB is connected");
     // Start the server (both HTTP and Socket.io)
-    server.listen(SOCKETPORT, () => console.log(`✅ Socket Server running on http://localhost:${SOCKETPORT}`));
+    server.listen(PORT, () => {
+        console.log(`✅ Server running on http://localhost:${PORT}`);
+    });
 })
     .catch((err) => {
     console.error("DB connection error:", err);
     throw new app_error_util_1.default("DB can't connect", 500);
-});
-// Start the Express app (HTTP server)
-app_1.default.listen(PORT, () => {
-    console.log(`Server running on http://localhost:${PORT}`);
 });

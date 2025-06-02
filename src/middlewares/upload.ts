@@ -122,7 +122,9 @@ export const uploadAny = multer({
         return {
           folder: "course_videos",
           resource_type: "video",
-          public_id: `${Date.now()}-${file.originalname.replace(/\s/g, "-")}`,
+          public_id: `${Date.now()}-${Math.floor(Math.random() * 1000)}-${file.originalname
+            .replace(/\s/g, "-")
+            .replace(/[^a-zA-Z0-9.\-_]/g, "")}`,
         };
       } else {
         throw new Error("Unsupported file type.");

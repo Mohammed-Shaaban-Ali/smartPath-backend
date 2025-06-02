@@ -34,55 +34,12 @@ var __importStar = (this && this.__importStar) || (function () {
 })();
 Object.defineProperty(exports, "__esModule", { value: true });
 const mongoose_1 = __importStar(require("mongoose"));
-// Progress Schema
-const progressSchema = new mongoose_1.default.Schema({
-    course: { type: mongoose_1.default.Schema.Types.ObjectId, ref: "Course" },
-    watchedVideos: [{ type: mongoose_1.default.Schema.Types.ObjectId, ref: "Video" }],
-});
-// User Schema
-const UserSchema = new mongoose_1.Schema({
-    name: {
-        type: String,
-        required: true,
-    },
-    googleId: {
-        type: String,
-        unique: true,
-        sparse: true,
-    },
-    email: {
-        type: String,
-        required: true,
-        unique: true,
-        trim: true,
-        lowercase: true,
-    },
-    password: {
-        type: String,
-    },
-    isVerified: {
-        type: Boolean,
-        default: false,
-    },
-    isVerifiedotp: {
-        type: Boolean,
-        default: false,
-    },
-    otp: {
-        type: String,
-    },
-    otpExpiration: {
-        type: Date,
-    },
-    avatar: {
-        type: String,
-        required: false,
-        default: "https://cdn3d.iconscout.com/3d/premium/thumb/graduate-student-avatar-3d-icon-download-in-png-blend-fbx-gltf-file-formats--education-study-school-job-and-profession-pack-professionals-icons-7825922.png?f=webp",
-    }, // Cloudinary Image URL
-    enrolledCourses: [{ type: mongoose_1.default.Schema.Types.ObjectId, ref: "Course" }],
-    progress: [progressSchema],
+const GroupSchema = new mongoose_1.Schema({
+    name: { type: String, required: true, unique: true },
+    image: { type: String, default: null },
+    createdBy: { type: mongoose_1.Schema.Types.ObjectId, ref: "User", required: true },
 }, {
     timestamps: true,
 });
-const User = mongoose_1.default.model("User", UserSchema);
-exports.default = User;
+const Group = mongoose_1.default.model("Group", GroupSchema);
+exports.default = Group;

@@ -40,6 +40,11 @@ const MessageSchema = new mongoose_1.Schema({
         ref: "User",
         required: true,
     },
+    group: {
+        type: mongoose_1.Schema.Types.ObjectId,
+        ref: "Group",
+        required: true,
+    },
     image: { type: String, default: null },
     content: {
         type: String,
@@ -47,8 +52,6 @@ const MessageSchema = new mongoose_1.Schema({
             return !this.image;
         },
     },
-}, {
-    timestamps: true,
-});
+}, { timestamps: true });
 const Message = mongoose_1.default.model("Message", MessageSchema);
 exports.default = Message;

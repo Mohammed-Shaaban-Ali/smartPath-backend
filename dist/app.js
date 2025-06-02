@@ -17,7 +17,9 @@ const track_routers_1 = __importDefault(require("./routers/track.routers"));
 const framwork_router_1 = __importDefault(require("./routers/framwork.router"));
 const roadmap_router_1 = __importDefault(require("./routers/roadmap.router"));
 const blog_router_1 = __importDefault(require("./routers/blog.router"));
+const group_router_1 = __importDefault(require("./routers/group.router"));
 const message_router_1 = __importDefault(require("./routers/message.router"));
+const courses_router_1 = __importDefault(require("./routers/courses.router"));
 const passport_1 = __importDefault(require("passport"));
 const passport_setup_util_1 = require("./utils/passport-setup.util");
 const app = (0, express_1.default)();
@@ -39,9 +41,14 @@ app.use(`${constants_1.API_PREFIX}/framwork`, framwork_router_1.default);
 app.use(`${constants_1.API_PREFIX}/roadmap`, roadmap_router_1.default);
 app.use(`${constants_1.API_PREFIX}/blog`, blog_router_1.default);
 app.use(`${constants_1.API_PREFIX}/message`, message_router_1.default);
+app.use(`${constants_1.API_PREFIX}/group`, group_router_1.default);
+app.use(`${constants_1.API_PREFIX}/courses`, courses_router_1.default);
 // Base route
 app.get("/", (req, res) => {
     res.status(200).json((0, format_res_util_1.default)("API server is running..."));
+});
+app.get("/test", (req, res) => {
+    res.status(200).json((0, format_res_util_1.default)("test server is running..."));
 });
 // Not-Found
 app.use((req, res, next) => {

@@ -6,9 +6,10 @@ Object.defineProperty(exports, "__esModule", { value: true });
 const express_1 = require("express");
 const authentication_controller_1 = require("../controllers/authentication.controller");
 const passport_1 = __importDefault(require("passport"));
+const upload_1 = require("../middlewares/upload");
 const router = (0, express_1.Router)();
 // register
-router.post("/register", authentication_controller_1.registerController);
+router.post("/register", upload_1.uploadImage.single("avatar"), authentication_controller_1.registerController);
 // login
 router.post("/login", authentication_controller_1.loginController);
 // verify email

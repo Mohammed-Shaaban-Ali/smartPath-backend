@@ -34,55 +34,29 @@ var __importStar = (this && this.__importStar) || (function () {
 })();
 Object.defineProperty(exports, "__esModule", { value: true });
 const mongoose_1 = __importStar(require("mongoose"));
-// Progress Schema
-const progressSchema = new mongoose_1.default.Schema({
-    course: { type: mongoose_1.default.Schema.Types.ObjectId, ref: "Course" },
-    watchedVideos: [{ type: mongoose_1.default.Schema.Types.ObjectId, ref: "Video" }],
+const videoSchema = new mongoose_1.default.Schema({
+    title: String,
+    videoUrl: String,
+    duration: Number,
 });
-// User Schema
-const UserSchema = new mongoose_1.Schema({
-    name: {
-        type: String,
-        required: true,
-    },
-    googleId: {
-        type: String,
-        unique: true,
-        sparse: true,
-    },
-    email: {
-        type: String,
-        required: true,
-        unique: true,
-        trim: true,
-        lowercase: true,
-    },
-    password: {
-        type: String,
-    },
-    isVerified: {
-        type: Boolean,
-        default: false,
-    },
-    isVerifiedotp: {
-        type: Boolean,
-        default: false,
-    },
-    otp: {
-        type: String,
-    },
-    otpExpiration: {
-        type: Date,
-    },
-    avatar: {
-        type: String,
-        required: false,
-        default: "https://cdn3d.iconscout.com/3d/premium/thumb/graduate-student-avatar-3d-icon-download-in-png-blend-fbx-gltf-file-formats--education-study-school-job-and-profession-pack-professionals-icons-7825922.png?f=webp",
-    }, // Cloudinary Image URL
-    enrolledCourses: [{ type: mongoose_1.default.Schema.Types.ObjectId, ref: "Course" }],
-    progress: [progressSchema],
-}, {
-    timestamps: true,
+const sectionSchema = new mongoose_1.default.Schema({
+    title: String,
+    totalDuration: Number,
+    videos: [videoSchema],
 });
-const User = mongoose_1.default.model("User", UserSchema);
-exports.default = User;
+const courseSchema = new mongoose_1.default.Schema({
+    title: String,
+    description: String,
+    image: String,
+    totalDuration: Number,
+    track: { type: mongoose_1.Schema.Types.ObjectId, ref: "Track", required: true },
+    sections: [sectionSchema],
+    ratings: [
+        {
+            user: { type: mongoose_1.default.Schema.Types.ObjectId, ref: "User" },
+            rate: Number,
+        },
+    ],
+    enrolledUsers: [{ type: mongoose_1.default.Schema.Types.ObjectId, ref: "User" }],
+});
+exports.default = mongoose_1.default.model("Course", courseSchema);

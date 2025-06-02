@@ -36,18 +36,24 @@ const setupSocket = (server) => {
                     imageUrl = result.secure_url;
                 }
                 const message = yield Message_1.default.create({
-                    // now the senderId i send the token and the id in the token => req.userId
                     sender: data.senderId,
+                    group: data.groupId, // 👈 هنا بنبعت الجروب
                     content: data.content,
                     image: imageUrl,
                 });
-                const populatedMessage = yield message.populate("sender", "name");
-                io.emit("newMessage", populatedMessage);
+                const populatedMessage = yield message.populate("sender", "name avatar");
+                // بدل ما نبعت للكل، نبعته بس للجروب دا
+                io.to(data.groupId).emit("newMessage", populatedMessage);
             }
             catch (error) {
                 console.error("❌ Error saving message:", error);
             }
         }));
+        // Joining a group room
+        socket.on("joinGroup", (groupId) => {
+            socket.join(groupId);
+            console.log(`Socket ${socket.id} joined group ${groupId}`);
+        });
         socket.on("disconnect", () => {
             console.log("❌ Client disconnected:", socket.id);
         });
