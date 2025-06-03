@@ -19,7 +19,7 @@ router.post(
   createCourse
 );
 // Get all courses
-router.get("/", getCourses);
+router.get("/", authMiddleware, getCourses);
 
 // Enroll in course
 router.post("/enroll/:courseId", authMiddleware, enrollInCourse);

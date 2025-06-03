@@ -120,6 +120,12 @@ export const createCourse = async (
 
 // Get All Courses
 export const getCourses = asyncHandler(async (req: Request, res: Response) => {
+  const userId = (req as AuthRequest).userId;
+  const user = await User.findById(userId).lean();
+  // check if user exists
+  if (!user) {
+    throw new Error("User not found");
+  }
   const { search } = req.query;
   const page = parseInt(req.query.page as string, 10) || 1;
   const limit = parseInt(req.query.limit as string, 10) || 10;
@@ -168,6 +174,10 @@ export const getCourses = asyncHandler(async (req: Request, res: Response) => {
           ) / ratings.length
         : 0;
 
+    const isEnrollment = user?.enrolledCourses.some(
+      (id) => id.toString() === course._id.toString()
+    );
+
     return {
       id: course._id,
       title: course.title,
@@ -176,8 +186,10 @@ export const getCourses = asyncHandler(async (req: Request, res: Response) => {
       totalDuration: course.totalDuration,
       averageRating: averageRating.toFixed(1),
       track: course.track,
+      isEnrollment, // 🔥 added here
     };
   });
+
   const coursesWithPageination = paginateArray(formattedCourses, page, limit);
   res.status(200).json(
     formatRes("Courses fetched successfully", {
