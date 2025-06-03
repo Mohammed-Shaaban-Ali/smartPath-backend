@@ -144,6 +144,7 @@ export const verifyEmailController = async (
       formatRes("Email verified and registration completed successfully", {
         token,
         user: {
+          id: createdUser.id,
           name: createdUser.name,
           email: createdUser.email,
           avatar: createdUser.avatar,

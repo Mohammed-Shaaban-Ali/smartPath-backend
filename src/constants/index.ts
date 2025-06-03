@@ -3,7 +3,7 @@ export const API_PREFIX = "/api/v1";
 export const PORT = process.env.PORT as string;
 export const MONGO_URI = process.env.MONGO_URI as string;
 export const PROD_URL = "https://smart-path-seven.vercel.app/api/v1";
-export const LOCAL_URL = `http://localhost:2530${API_PREFIX}`;
+export const LOCAL_URL = `http://164.128.130.9:2530${API_PREFIX}`;
 
 // Legacy Auth
 export const JWT_SECRET = process.env.JWT_SECRET as string;
