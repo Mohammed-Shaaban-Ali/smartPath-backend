@@ -14,6 +14,16 @@ export const getTracks = asyncHandler(async (_req: Request, res: Response) => {
 });
 
 /**
+ * Get all tracks for sselect return id and title
+ */
+export const getTracksForSelect = asyncHandler(
+  async (_req: Request, res: Response) => {
+    const tracks = await Track.find().select("title _id");
+    res.status(200).json(formatRes("Tracks fetched successfully", { tracks }));
+  }
+);
+
+/**
  * Get track by ID
  */
 export const getTrackById = asyncHandler(

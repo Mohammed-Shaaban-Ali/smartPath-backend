@@ -6,12 +6,15 @@ import {
   createTrack,
   updateTrack,
   deleteTrack,
+  getTracksForSelect,
 } from "../controllers/track.controller";
 import { uploadImage } from "../middlewares/upload";
 
 const router = Router();
 
 router.get("/", getTracks);
+router.get("/select", getTracksForSelect);
+
 router.get("/:id", getTrackById);
 router.post(
   "/",
