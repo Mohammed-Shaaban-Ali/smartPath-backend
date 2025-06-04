@@ -1,5 +1,29 @@
 import mongoose, { Schema, Document } from "mongoose";
+// roadmap
+export type typeOfLink = "course" | "single_video" | "article" | "project";
+type Roadmap = {
+  title: string;
+  introduction: string;
+  steps: {
+    step_number: number;
+    step_title: string;
+    description: string;
+    link: string | null;
+    completed: boolean; // <== NEW
+    categories: {
+      category_title: string;
+      items: {
+        title: string;
+        link: string | null;
+        duration: string;
+        type_of_link: typeOfLink;
+        completed: boolean; // <== NEW
+      }[];
+    }[];
+  }[];
+};
 
+//--------------
 // Define the Progress interface
 interface IProgress {
   course: mongoose.Types.ObjectId;
@@ -23,6 +47,8 @@ export interface IUser extends Document {
   progress: IProgress[];
   createdAt: Date;
   updatedAt: Date;
+
+  roadmap: Roadmap;
 }
 
 // Progress Schema
@@ -75,6 +101,10 @@ const UserSchema: Schema = new Schema(
     }, // Cloudinary Image URL
     enrolledCourses: [{ type: mongoose.Schema.Types.ObjectId, ref: "Course" }],
     progress: [progressSchema],
+    // roadmap
+    roadmap: {
+      type: Object,
+    },
   },
   {
     timestamps: true,

@@ -13,11 +13,7 @@ import { authMiddleware } from "../middlewares/authentication.middleware";
 const router = express.Router();
 
 // Create course
-router.post(
-  "/",
-  uploadAny.any(), // كل الملفات بأي اسم
-  createCourse
-);
+router.post("/", uploadAny.any(), createCourse);
 // Get all courses
 router.get("/", authMiddleware, getCourses);
 
@@ -29,6 +25,7 @@ router.get("/user", authMiddleware, getUserCourses);
 
 // makr video as watched
 router.post("/mark-video-watched", authMiddleware, markVideoAsWatched);
+
 // Get course with progress
 router.get("/:courseId", authMiddleware, getCourseWithProgress);
 
