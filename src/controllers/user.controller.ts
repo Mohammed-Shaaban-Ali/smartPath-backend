@@ -12,6 +12,8 @@ import { getUserByEmail } from "../services/authentication.service";
 import { AuthRequest } from "../middlewares/authentication.middleware";
 import cloudinary from "../config/cloudinary";
 import { roadmapSchema } from "../Schema/Roadmap";
+import { User } from "../models";
+import { paginateArray } from "../utils/paginate";
 export const updateUserController = async (
   req: AuthRequest,
   res: Response,
@@ -273,6 +275,28 @@ export const getUserRoadmapController = async (
         progressPercent: Math.round(progressPercent * 100) / 100, // تقريب لـ 2 رقم عشري
       })
     );
+  } catch (err) {
+    next(err);
+  }
+};
+
+// get all users for dashboard
+export const getAllUsersController = async (
+  req: AuthRequest,
+  res: Response,
+  next: NextFunction
+) => {
+  try {
+    const users = await User.find().select("_id name avatar email");
+    const page = parseInt(req.query.page as string, 10) || 1;
+    const limit = parseInt(req.query.limit as string, 10) || 10;
+    const usersWithPageination = paginateArray(users, page, limit);
+
+    res
+      .status(200)
+      .json(
+        formatRes("User updated successfully", { user: usersWithPageination })
+      );
   } catch (err) {
     next(err);
   }

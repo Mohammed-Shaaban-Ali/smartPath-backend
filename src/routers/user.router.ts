@@ -6,6 +6,7 @@ import {
   addRoadmapToUser,
   markItemAsCompleted,
   getUserRoadmapController,
+  getAllUsersController,
 } from "../controllers/user.controller";
 import { authMiddleware } from "../middlewares/authentication.middleware";
 import { uploadImage } from "../middlewares/upload";
@@ -25,5 +26,9 @@ router.put("/reset-password", updatePasswordController);
 router.get("/get-roadmap", authMiddleware, getUserRoadmapController);
 router.post("/add-roadmap", authMiddleware, addRoadmapToUser);
 router.post("/complete-item", authMiddleware, markItemAsCompleted);
+
+// dashboard
+// getAllUsersController
+router.get("/dashboard/all-users", authMiddleware, getAllUsersController);
 
 export default router;
