@@ -255,7 +255,12 @@ export const loginController = async (
     // Send success response
     res.status(200).json(
       formatRes("Login Done Successfully", {
-        user: loginedUser,
+        user: {
+          _id: loginedUser._id,
+          email: loginedUser.email,
+          name: loginedUser.name,
+          avatar: loginedUser.avatar,
+        },
         token,
       })
     );
