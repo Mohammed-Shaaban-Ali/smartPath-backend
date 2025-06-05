@@ -295,7 +295,7 @@ export const getAllUsersController = async (
     res
       .status(200)
       .json(
-        formatRes("User updated successfully", { user: usersWithPageination })
+        formatRes("User updated successfully",   usersWithPageination )
       );
   } catch (err) {
     next(err);
