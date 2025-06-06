@@ -280,6 +280,7 @@ export const getUserRoadmapController = async (
   }
 };
 
+// ------------dashboard--------------
 // get all users for dashboard
 export const getAllUsersController = async (
   req: AuthRequest,
@@ -287,16 +288,215 @@ export const getAllUsersController = async (
   next: NextFunction
 ) => {
   try {
-    const users = await User.find().select("_id name avatar email");
+    // Fetch all users with roadmap field populated
+    const users = await User.find()
+      .select("_id name avatar email roadmap enrolledCourses progress")
+      .populate("enrolledCourses");
+
     const page = parseInt(req.query.page as string, 10) || 1;
     const limit = parseInt(req.query.limit as string, 10) || 10;
-    const usersWithPageination = paginateArray(users, page, limit);
+    const paginatedUsers = paginateArray(users, page, limit);
 
-    res
-      .status(200)
-      .json(
-        formatRes("User updated successfully",   usersWithPageination )
-      );
+    const usersWithProgress = await Promise.all(
+      paginatedUsers?.items?.map(async (user) => {
+        // Roadmap progress
+        let progressPercent = null;
+
+        if (
+          user.roadmap &&
+          user.roadmap.steps &&
+          user.roadmap.steps.length > 0
+        ) {
+          let totalDuration = 0;
+          let completedDuration = 0;
+
+          user.roadmap.steps.forEach((step) => {
+            step.categories.forEach((category) => {
+              category.items.forEach((item) => {
+                const dur = parseDurationToMinutes(
+                  item.duration || "0 minutes"
+                );
+                totalDuration += dur;
+                if (item.completed) {
+                  completedDuration += dur;
+                }
+              });
+            });
+          });
+
+          progressPercent =
+            totalDuration > 0
+              ? Math.round((completedDuration / totalDuration) * 10000) / 100
+              : 0;
+        }
+
+        const trackName =
+          user?.roadmap?.title?.replace("Learning Roadmap for ", "") || null;
+
+        // Course Progress
+        const courseProgress = await Promise.all(
+          user.enrolledCourses.map(async (course: any) => {
+            // Count total videos in course
+            const totalVideos = course.sections.reduce(
+              (acc: number, section: any) => acc + section.videos.length,
+              0
+            );
+
+            // Find user's watched videos for this course from progress[]
+            const userCourseProgress = user.progress.find(
+              (p) => p.course.toString() === course._id.toString()
+            );
+
+            const watchedVideosCount = userCourseProgress
+              ? userCourseProgress.watchedVideos.length
+              : 0;
+
+            const coursePercent =
+              totalVideos > 0
+                ? Math.round((watchedVideosCount / totalVideos) * 10000) / 100
+                : 0;
+
+            return {
+              _id: course._id,
+              title: course.title,
+              image: course.image,
+              totalVideos,
+              watchedVideos: watchedVideosCount,
+              progress: coursePercent,
+            };
+          })
+        );
+
+        // Final formatted user
+        return {
+          _id: user._id,
+          name: user.name,
+          avatar: user.avatar,
+          email: user.email,
+          roadmap: {
+            progress: progressPercent,
+            trackName,
+          },
+          enrolledCourses: courseProgress,
+        };
+      })
+    );
+
+    res.status(200).json(
+      formatRes("Users fetched successfully", {
+        items: usersWithProgress,
+        totalItems: paginatedUsers.totalItems,
+        totalPages: paginatedUsers.totalPages,
+        currentPage: paginatedUsers.currentPage,
+        perPage: paginatedUsers.perPage,
+      })
+    );
+  } catch (err) {
+    next(err);
+  }
+};
+
+export const getSingleUserDashboardController = async (
+  req: AuthRequest,
+  res: Response,
+  next: NextFunction
+): Promise<void> => {
+  try {
+    const { id } = req.params;
+    const user = await User.findById(id).populate("enrolledCourses");
+    // .populate("progress.course");
+    // .populate("progress.watchedVideos");
+    if (!user) {
+      res.status(404).json(formatRes("User not found"));
+      return;
+    }
+
+    // Roadmap progress calculation
+    let progressPercent = null;
+    let totalItems = 0;
+    let completedItems = 0;
+
+    if (user.roadmap && user.roadmap.steps && user.roadmap.steps.length > 0) {
+      user.roadmap.steps.forEach((step) => {
+        step.categories.forEach((category) => {
+          category.items.forEach((item) => {
+            totalItems += 1;
+            if (item.completed) {
+              completedItems += 1;
+            }
+          });
+        });
+      });
+
+      progressPercent =
+        totalItems > 0
+          ? Math.round((completedItems / totalItems) * 10000) / 100
+          : 0;
+    }
+
+    const trackName =
+      user?.roadmap?.title?.replace("Learning Roadmap for ", "") || null;
+
+    // Enrolled courses & course progress
+    const courseProgress = await Promise.all(
+      user.enrolledCourses.map(async (course: any) => {
+        const totalVideos = course.sections.reduce(
+          (acc: number, section: any) => acc + section.videos.length,
+          0
+        );
+
+        const userCourseProgress = user.progress.find(
+          (p) => p.course._id.toString() === course._id.toString()
+        );
+
+        const watchedVideosCount = userCourseProgress
+          ? userCourseProgress.watchedVideos.length
+          : 0;
+
+        const coursePercent =
+          totalVideos > 0
+            ? Math.round((watchedVideosCount / totalVideos) * 10000) / 100
+            : 0;
+
+        const userRating = course.ratings.find(
+          (r: any) => r.user.toString() === user._id.toString()
+        )?.rate;
+
+        return {
+          _id: course._id,
+          title: course.title,
+          image: course.image,
+          totalVideos,
+          watchedVideos: watchedVideosCount,
+          progress: coursePercent,
+          userRating: userRating || null,
+        };
+      })
+    );
+
+    const totalWatchedVideos = user.progress.reduce(
+      (acc, prog) => acc + prog.watchedVideos.length,
+      0
+    );
+
+    res.status(200).json(
+      formatRes("User fetched successfully", {
+        _id: user._id,
+        name: user.name,
+        email: user.email,
+        avatar: user.avatar,
+        roadmap: {
+          progress: progressPercent,
+          trackName,
+          totalItems,
+          completedItems,
+        },
+        enrolledCoursesCount: user.enrolledCourses.length,
+        enrolledCourses: courseProgress,
+        totalWatchedVideos,
+        createdAt: user.createdAt,
+      })
+    );
   } catch (err) {
     next(err);
   }

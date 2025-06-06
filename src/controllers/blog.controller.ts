@@ -3,6 +3,7 @@ import Blog from "../models/Blog";
 import cloudinary from "../config/cloudinary";
 import AppError from "../utils/app-error.util";
 import formatRes from "../utils/format-res.util";
+import { paginateArray } from "../utils/paginate";
 
 /**
  * Get all blogs
@@ -119,6 +120,27 @@ export const deleteBlog = async (
     const blog = await Blog.findByIdAndDelete(req.params.id);
     if (!blog) throw new AppError("Blog not found", 404);
     res.json(formatRes("Blog deleted successfully", {}));
+  } catch (err) {
+    next(err);
+  }
+};
+
+/**
+ * ------------Dashboard Controller------------
+ */
+export const getAllBlogs = async (
+  req: Request,
+  res: Response,
+  next: NextFunction
+) => {
+  try {
+    const page = parseInt(req.query.page as string, 10) || 1;
+    const limit = parseInt(req.query.limit as string, 10) || 10;
+
+    const blogs = await Blog.find().sort({ createdAt: -1 }); // Sort by latest blogs
+    const paginatedBlogs = paginateArray(blogs, page, limit);
+
+    res.json(formatRes("Blogs fetched successfully", paginatedBlogs));
   } catch (err) {
     next(err);
   }

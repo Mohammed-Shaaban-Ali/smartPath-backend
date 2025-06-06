@@ -7,6 +7,7 @@ import { AuthRequest } from "../middlewares/authentication.middleware";
 import mongoose from "mongoose";
 import Track from "../models/Track";
 import { paginateArray } from "../utils/paginate";
+import { markItemAsCompleted } from "./user.controller";
 
 // types
 interface Video {
@@ -385,3 +386,130 @@ export const markVideoAsWatched = asyncHandler(
     );
   }
 );
+
+//
+/**
+ * ------------Dashboard Controller------------
+ */
+export const getAllCourses = async (
+  req: Request,
+  res: Response,
+  next: NextFunction
+) => {
+  try {
+    const page = parseInt(req.query.page as string, 10) || 1;
+    const limit = parseInt(req.query.limit as string, 10) || 10;
+
+    const courses = await Course.aggregate([
+      {
+        $lookup: {
+          from: "users",
+          localField: "_id",
+          foreignField: "enrolledCourses",
+          as: "enrolledUsers",
+        },
+      },
+      {
+        $lookup: {
+          from: "users",
+          let: { courseId: "$_id", sections: "$sections" },
+          pipeline: [
+            {
+              $match: {
+                $expr: {
+                  $in: ["$$courseId", "$enrolledCourses"],
+                },
+              },
+            },
+            {
+              $addFields: {
+                progressForCourse: {
+                  $filter: {
+                    input: "$progress",
+                    as: "prog",
+                    cond: {
+                      $eq: ["$$prog.course", "$$courseId"],
+                    },
+                  },
+                },
+              },
+            },
+            {
+              $addFields: {
+                totalVideos: {
+                  $sum: {
+                    $map: {
+                      input: "$$sections",
+                      as: "section",
+                      in: { $size: "$$section.videos" },
+                    },
+                  },
+                },
+              },
+            },
+            {
+              $addFields: {
+                isCompleted: {
+                  $map: {
+                    input: "$progressForCourse",
+                    as: "prog",
+                    in: {
+                      $eq: [{ $size: "$$prog.watchedVideos" }, "$totalVideos"],
+                    },
+                  },
+                },
+              },
+            },
+            {
+              $match: {
+                isCompleted: { $in: [true] },
+              },
+            },
+          ],
+          as: "completedUsers",
+        },
+      },
+      {
+        $sort: { createdAt: -1 },
+      },
+    ]);
+
+    // Pagination manually for aggregation result
+    const paginatedCourses = paginateArray(courses, page, limit);
+
+    res.json(
+      formatRes("Courses fetched successfully", {
+        items: paginatedCourses?.items?.map((c) => ({
+          _id: c._id,
+          title: c.title,
+          enrolledCount: c.enrolledUsers.length,
+          completedCount: c.completedUsers.length,
+          image: c.image,
+          totalDuration: c.totalDuration,
+          numberOfSections: c.sections.length,
+        })),
+        totalItems: paginatedCourses?.totalItems,
+        totalPages: paginatedCourses?.totalPages,
+        currentPage: paginatedCourses?.currentPage,
+      })
+    );
+  } catch (err) {
+    next(err);
+  }
+};
+
+// get single course for dashboard
+export const getSingleCourse = async (
+  req: Request,
+  res: Response,
+  next: NextFunction
+) => {
+  try {
+    const course = await Course.findById(req.params.id).populate(
+      "sections.videos"
+    );
+    res.json(formatRes("Course fetched successfully", course));
+  } catch (err) {
+    next(err);
+  }
+};

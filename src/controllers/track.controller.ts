@@ -4,6 +4,7 @@ import cloudinary from "../config/cloudinary";
 import AppError from "../utils/app-error.util";
 import formatRes from "../utils/format-res.util";
 import asyncHandler from "../utils/async-handler.util";
+import { paginateArray } from "../utils/paginate";
 
 /**
  * Get all tracks
@@ -117,3 +118,32 @@ export const deleteTrack = asyncHandler(async (req: Request, res: Response) => {
 
   res.status(200).json(formatRes("Track deleted successfully"));
 });
+
+/**
+ * ------------Dashboard Controller------------
+ */
+
+// get all tracks for dashboard
+export const getAllTracks = asyncHandler(
+  async (req: Request, res: Response) => {
+    const page = parseInt(req.query.page as string, 10) || 1;
+    const limit = parseInt(req.query.limit as string, 10) || 10;
+
+    const tracks = await Track.find().populate("section");
+    const paginatedTracks = paginateArray(tracks, page, limit);
+
+    res
+      .status(200)
+      .json(formatRes("Tracks fetched successfully", paginatedTracks));
+  }
+);
+
+// get single track for dashboard
+export const getSingleTrack = asyncHandler(
+  async (req: Request, res: Response) => {
+    const track = await Track.findById(req.params.id).populate("section");
+    if (!track) throw new AppError("Track not found", 404);
+
+    res.status(200).json(formatRes("Track fetched successfully", track));
+  }
+);

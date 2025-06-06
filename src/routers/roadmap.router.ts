@@ -5,14 +5,21 @@ import {
   createRoadmap,
   updateRoadmap,
   deleteRoadmap,
+  getAllRoadmaps,
+  getSingleRoadmap,
 } from "../controllers/roadmap.controller";
 import { uploadImage } from "../middlewares/upload";
+import { authMiddleware } from "../middlewares/authentication.middleware";
 
 const router = express.Router();
 
 // Get all roadmaps
 router.get("/", getRoadmaps);
 
+// get all roadmaps for dashboard
+router.get("/dashboard", authMiddleware, getAllRoadmaps);
+// get single roadmap for dashboard
+router.get("/dashboard/:id", authMiddleware, getSingleRoadmap);
 // Get roadmap by ID
 router.get("/:id", getRoadmapById);
 

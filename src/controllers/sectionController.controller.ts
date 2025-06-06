@@ -4,6 +4,7 @@ import cloudinary from "../config/cloudinary";
 import AppError from "../utils/app-error.util";
 import formatRes from "../utils/format-res.util";
 import asyncHandler from "../utils/async-handler.util";
+import { paginateArray } from "../utils/paginate";
 
 /**
  * Get all sections
@@ -94,3 +95,54 @@ export const deleteSection = asyncHandler(
     res.status(200).json(formatRes("Section deleted successfully"));
   }
 );
+
+/**
+ * ------------Dashboard Controller------------
+ */
+export const getAllSections = async (
+  req: Request,
+  res: Response,
+  next: NextFunction
+) => {
+  try {
+    const page = parseInt(req.query.page as string, 10) || 1;
+    const limit = parseInt(req.query.limit as string, 10) || 10;
+
+    const sections = await Section.find().sort({ createdAt: -1 }); // Sort by latest blogs
+    const paginatedSections = paginateArray(sections, page, limit);
+
+    res.json(formatRes("Sections fetched successfully", paginatedSections));
+  } catch (err) {
+    next(err);
+  }
+};
+
+// get single section for dashboard
+export const getSingleSection = async (
+  req: Request,
+  res: Response,
+  next: NextFunction
+) => {
+  try {
+    const section = await Section.findById(req.params.id);
+    res.json(formatRes("Section fetched successfully", section));
+  } catch (err) {
+    next(err);
+  }
+};
+
+// get sections for select
+export const getSectionsForSelect = async (
+  req: Request,
+  res: Response,
+  next: NextFunction
+) => {
+  try {
+    const sections = await Section.find()
+      .sort({ createdAt: -1 })
+      .select("title _id"); // Sort by latest blogs
+    res.json(formatRes("Sections fetched successfully", sections));
+  } catch (err) {
+    next(err);
+  }
+};

@@ -3,6 +3,7 @@ import Roadmap from "../models/Roadmap";
 import cloudinary from "../config/cloudinary";
 import AppError from "../utils/app-error.util";
 import formatRes from "../utils/format-res.util";
+import { paginateArray } from "../utils/paginate";
 
 /**
  * Get all roadmaps
@@ -116,6 +117,43 @@ export const deleteRoadmap = async (
     const roadmap = await Roadmap.findByIdAndDelete(req.params.id);
     if (!roadmap) throw new AppError("Roadmap not found", 404);
     res.json(formatRes("Roadmap deleted successfully", {}));
+  } catch (err) {
+    next(err);
+  }
+};
+
+/**
+ * ------------Dashboard Controller------------
+ */
+
+// get all roadmaps for dashboard
+export const getAllRoadmaps = async (
+  req: Request,
+  res: Response,
+  next: NextFunction
+) => {
+  try {
+    const page = parseInt(req.query.page as string, 10) || 1;
+    const limit = parseInt(req.query.limit as string, 10) || 10;
+
+    const roadmaps = await Roadmap.find().populate("framework"); // Populate Framework details
+    const paginatedRoadmaps = paginateArray(roadmaps, page, limit);
+
+    res.json(formatRes("Roadmaps fetched successfully", paginatedRoadmaps));
+  } catch (err) {
+    next(err);
+  }
+};
+
+// get single roadmap for dashboard
+export const getSingleRoadmap = async (
+  req: Request,
+  res: Response,
+  next: NextFunction
+) => {
+  try {
+    const roadmap = await Roadmap.findById(req.params.id).populate("framework");
+    res.json(formatRes("Roadmap fetched successfully", roadmap));
   } catch (err) {
     next(err);
   }

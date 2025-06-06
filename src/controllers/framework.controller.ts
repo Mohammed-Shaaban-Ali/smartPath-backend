@@ -3,6 +3,7 @@ import Framework from "../models/Framework";
 import cloudinary from "../config/cloudinary";
 import AppError from "../utils/app-error.util";
 import formatRes from "../utils/format-res.util";
+import { paginateArray } from "../utils/paginate";
 
 /**
  * Get all frameworks
@@ -155,6 +156,57 @@ export const deleteFramework = async (
     const framework = await Framework.findByIdAndDelete(req.params.id);
     if (!framework) throw new AppError("Framework not found", 404);
     res.json(formatRes("Framework deleted successfully", {}));
+  } catch (err) {
+    next(err);
+  }
+};
+
+/**
+ * ------------Dashboard Controller------------
+ */
+// get all frameworks
+export const getAllFrameworks = async (
+  req: Request,
+  res: Response,
+  next: NextFunction
+) => {
+  try {
+    const page = parseInt(req.query.page as string, 10) || 1;
+    const limit = parseInt(req.query.limit as string, 10) || 10;
+
+    const frameworks = await Framework.find()
+      .populate("track")
+      .sort({ createdAt: -1 });
+    const paginatedFrameworks = paginateArray(frameworks, page, limit);
+
+    res.json(formatRes("Frameworks fetched successfully", paginatedFrameworks));
+  } catch (err) {
+    next(err);
+  }
+};
+
+// get single framework for dashboard
+export const getSingleFramework = async (
+  req: Request,
+  res: Response,
+  next: NextFunction
+) => {
+  try {
+    const framework = await Framework.findById(req.params.id).populate("track");
+    res.json(formatRes("Framework fetched successfully", framework));
+  } catch (err) {
+    next(err);
+  }
+};
+// get frameworks for select
+export const getFrameworksForSelect = async (
+  req: Request,
+  res: Response,
+  next: NextFunction
+) => {
+  try {
+    const frameworks = await Framework.find().select("title _id");
+    res.json(formatRes("Frameworks fetched successfully", frameworks));
   } catch (err) {
     next(err);
   }

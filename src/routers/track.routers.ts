@@ -7,13 +7,18 @@ import {
   updateTrack,
   deleteTrack,
   getTracksForSelect,
+  getAllTracks,
+  getSingleTrack,
 } from "../controllers/track.controller";
 import { uploadImage } from "../middlewares/upload";
+import { authMiddleware } from "../middlewares/authentication.middleware";
 
 const router = Router();
 
 router.get("/", getTracks);
 router.get("/select", getTracksForSelect);
+router.get("/dashboard", authMiddleware, getAllTracks);
+router.get("/dashboard/:id", authMiddleware, getSingleTrack);
 
 router.get("/:id", getTrackById);
 router.post(

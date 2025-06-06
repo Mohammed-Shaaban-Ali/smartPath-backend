@@ -5,13 +5,20 @@ import {
   createFramework,
   updateFramework,
   deleteFramework,
+  getFrameworksForSelect,
+  getSingleFramework,
+  getAllFrameworks,
 } from "../controllers/framework.controller";
 import { uploadImage } from "../middlewares/upload";
+import { authMiddleware } from "../middlewares/authentication.middleware";
 
 const router = express.Router();
 
 // Get all frameworks
 router.get("/", getFrameworks);
+router.get("/select", getFrameworksForSelect);
+router.get("/dashboard", authMiddleware, getAllFrameworks);
+router.get("/dashboard/:id", authMiddleware, getSingleFramework);
 
 // Get framework by ID
 router.get("/:id", getFrameworkById);

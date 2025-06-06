@@ -7,6 +7,7 @@ import {
   markItemAsCompleted,
   getUserRoadmapController,
   getAllUsersController,
+  getSingleUserDashboardController,
 } from "../controllers/user.controller";
 import { authMiddleware } from "../middlewares/authentication.middleware";
 import { uploadImage } from "../middlewares/upload";
@@ -29,6 +30,12 @@ router.post("/complete-item", authMiddleware, markItemAsCompleted);
 
 // dashboard
 // getAllUsersController
-router.get("/dashboard/all-users", authMiddleware, getAllUsersController);
+router.get("/dashboard/users", authMiddleware, getAllUsersController);
+// get single user
+router.get(
+  "/dashboard/users/:id",
+  authMiddleware,
+  getSingleUserDashboardController
+);
 
 export default router;

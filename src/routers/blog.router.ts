@@ -5,6 +5,7 @@ import {
   createBlog,
   updateBlog,
   deleteBlog,
+  getAllBlogs,
 } from "../controllers/blog.controller";
 import { uploadImage } from "../middlewares/upload";
 
@@ -12,6 +13,9 @@ const router = express.Router();
 
 // Get all blogs
 router.get("/", getBlogs);
+
+// get all blogs for dashboard
+router.get("/dashboard", getAllBlogs);
 
 // Get a single blog (increments view count)
 router.get("/:id", getBlogById);
