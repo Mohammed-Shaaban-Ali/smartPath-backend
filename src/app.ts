@@ -16,6 +16,7 @@ import blogRouter from "./routers/blog.router";
 import GroupRouter from "./routers/group.router";
 import MessageRouter from "./routers/message.router";
 import CoursesRouter from "./routers/courses.router";
+import DashboardRouter from "./routers/dashboard.router";
 
 import passport from "passport";
 import { configurePassport } from "./utils/passport-setup.util";
@@ -46,6 +47,7 @@ app.use(`${API_PREFIX}/blog`, blogRouter);
 app.use(`${API_PREFIX}/message`, MessageRouter);
 app.use(`${API_PREFIX}/group`, GroupRouter);
 app.use(`${API_PREFIX}/courses`, CoursesRouter);
+app.use(`${API_PREFIX}/dashboard`, DashboardRouter);
 
 // Base route
 app.get("/", (req, res) => {
