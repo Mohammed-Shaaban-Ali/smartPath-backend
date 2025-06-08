@@ -8,6 +8,7 @@ import mongoose from "mongoose";
 import Track from "../models/Track";
 import { paginateArray } from "../utils/paginate";
 import { markItemAsCompleted } from "./user.controller";
+import AppError from "../utils/app-error.util";
 
 // types
 interface Video {
@@ -476,7 +477,6 @@ export const getAllCourses = async (
 
     // Pagination manually for aggregation result
     const paginatedCourses = paginateArray(courses, page, limit);
-
     res.json(
       formatRes("Courses fetched successfully", {
         items: paginatedCourses?.items?.map((c) => ({
@@ -510,6 +510,21 @@ export const getSingleCourse = async (
       "sections.videos"
     );
     res.json(formatRes("Course fetched successfully", course));
+  } catch (err) {
+    next(err);
+  }
+};
+
+// delete course
+export const deleteCourse = async (
+  req: Request,
+  res: Response,
+  next: NextFunction
+) => {
+  try {
+    const course = await Course.findByIdAndDelete(req.params.id);
+    if (!course) throw new AppError("Course not found", 404);
+    res.json(formatRes("Course deleted successfully", {}));
   } catch (err) {
     next(err);
   }
