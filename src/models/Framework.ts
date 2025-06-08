@@ -6,6 +6,8 @@ export interface IFramework extends Document {
   icon3D: string;
   body: string;
   track: mongoose.Schema.Types.ObjectId; // Reference to Track
+  createdAt: Date;
+  updatedAt: Date;
 }
 
 const FrameworkSchema: Schema = new Schema(

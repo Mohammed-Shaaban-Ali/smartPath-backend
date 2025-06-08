@@ -5,6 +5,8 @@ export interface IRoadmap extends Document {
   icon: string;
   link: string;
   framework: mongoose.Schema.Types.ObjectId; // Reference to Framework
+  createdAt: Date;
+  updatedAt: Date;
 }
 
 const RoadmapSchema: Schema = new Schema(

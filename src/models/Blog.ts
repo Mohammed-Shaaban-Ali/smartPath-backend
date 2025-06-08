@@ -5,6 +5,8 @@ export interface IBlog extends Document {
   image: string;
   body: string;
   views: number;
+  createdAt: Date;
+  updatedAt: Date;
 }
 
 const BlogSchema: Schema = new Schema(

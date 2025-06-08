@@ -291,7 +291,7 @@ export const getAllUsersController = async (
     // Fetch all users with roadmap field populated
     const users = await User.find()
       .select(
-        "_id name avatar email roadmap enrolledCourses progress isBlocked"
+        "_id name avatar email roadmap enrolledCourses progress isBlocked createdAt"
       )
       .populate("enrolledCourses");
 
@@ -381,6 +381,7 @@ export const getAllUsersController = async (
           },
           enrolledCourses: courseProgress,
           isBlocked: user.isBlocked,
+          createdAt: user.createdAt,
         };
       })
     );

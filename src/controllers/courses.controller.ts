@@ -487,6 +487,7 @@ export const getAllCourses = async (
           image: c.image,
           totalDuration: c.totalDuration,
           numberOfSections: c.sections.length,
+          createdAt: c.createdAt,
         })),
         totalItems: paginatedCourses?.totalItems,
         totalPages: paginatedCourses?.totalPages,
