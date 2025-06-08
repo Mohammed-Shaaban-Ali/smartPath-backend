@@ -35,7 +35,19 @@ interface CreateCourseRequest extends Request {
     track: string; // Assuming track is a string ID
   };
 }
-
+interface UpdateCourseRequest extends Request {
+  files?:
+    | Express.Multer.File[]
+    | {
+        [fieldname: string]: Express.Multer.File[];
+      };
+  body: {
+    title?: string;
+    description?: string;
+    sections?: string;
+    track?: string;
+  };
+}
 // Create Course with videos and image upload
 export const createCourse = async (
   req: CreateCourseRequest,
@@ -115,6 +127,82 @@ export const createCourse = async (
       message: "Course created",
       course,
     });
+  } catch (err) {
+    next(err);
+  }
+};
+
+// --- Update Course ---
+export const updateCourse = async (
+  req: UpdateCourseRequest,
+  res: Response,
+  next: NextFunction
+): Promise<void> => {
+  try {
+    const courseId = req.params.id;
+    const { title, description, sections, track } = req.body;
+
+    const course = await Course.findById(courseId);
+    if (!course) {
+      res.status(404).json(formatRes("Course not found"));
+      return;
+    }
+
+    if (track) {
+      const trackExists = await Track.findById(track);
+      if (!trackExists) {
+        res.status(404).json(formatRes("Track not found"));
+        return;
+      }
+      course.track = trackExists._id as mongoose.Types.ObjectId;
+    }
+
+    let imageUrl: string | undefined;
+    let videoUrl: string[] = [];
+
+    (req.files as Express.Multer.File[])?.forEach((file) => {
+      if (file.fieldname === "image") {
+        imageUrl = file.path;
+      } else if (file.fieldname.includes("video")) {
+        videoUrl.push(file.path);
+      }
+    });
+
+    if (title) course.title = title;
+    if (description) course.description = description;
+    if (imageUrl) course.image = imageUrl;
+
+    if (sections) {
+      const parsedSections: Section[] = JSON.parse(sections);
+      let totalCourseDuration = 0;
+
+      const finalSections = parsedSections.map((section, index) => {
+        let sectionDuration = 0;
+
+        const videos = section.videos.map((vid, vidIndex) => {
+          sectionDuration += vid.duration;
+          return {
+            ...vid,
+            videoUrl: videoUrl[vidIndex] || vid.videoUrl || "",
+          };
+        });
+
+        totalCourseDuration += sectionDuration;
+
+        return {
+          title: section.title,
+          totalDuration: sectionDuration,
+          videos,
+        };
+      });
+
+      course.sections = finalSections as any;
+      course.totalDuration = totalCourseDuration;
+    }
+
+    await course.save();
+
+    res.status(200).json(formatRes("Course updated successfully", course));
   } catch (err) {
     next(err);
   }

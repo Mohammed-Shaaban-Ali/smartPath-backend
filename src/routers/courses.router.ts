@@ -9,6 +9,7 @@ import {
   getSingleCourse,
   getUserCourses,
   markVideoAsWatched,
+  updateCourse,
 } from "../controllers/courses.controller";
 import { uploadAny, uploadImage, uploadVideo } from "../middlewares/upload";
 import { authMiddleware } from "../middlewares/authentication.middleware";
@@ -22,6 +23,7 @@ router.post("/", uploadAny.any(), createCourse);
 router.get("/", authMiddleware, getCourses);
 // get all courses for dashboard
 router.get("/dashboard", authMiddleware, getAllCourses);
+router.post("/dashboard/:id", uploadAny.any(), updateCourse);
 router.get("/dashboard/:id", authMiddleware, getSingleCourse);
 router.delete("/dashboard/:id", authMiddleware, deleteCourse);
 // Enroll in course
