@@ -8,6 +8,7 @@ import {
   getUserRoadmapController,
   getAllUsersController,
   getSingleUserDashboardController,
+  blockUserController,
 } from "../controllers/user.controller";
 import { authMiddleware } from "../middlewares/authentication.middleware";
 import { uploadImage } from "../middlewares/upload";
@@ -37,5 +38,7 @@ router.get(
   authMiddleware,
   getSingleUserDashboardController
 );
+// block user by id
+router.put("/dashboard/users/block/:id", authMiddleware, blockUserController);
 
 export default router;

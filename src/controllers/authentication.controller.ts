@@ -233,6 +233,9 @@ export const loginController = async (
     if (!user.isVerified) {
       throw new AppError("Please verify your email before logging in", 401);
     }
+    if (!user.isBlocked) {
+      throw new AppError("User is blocked", 401);
+    }
 
     // Compare the password with the hashed password
     const isPasswordValid = await bcrypt.compare(password, user.password!);

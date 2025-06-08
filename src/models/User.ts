@@ -49,6 +49,9 @@ export interface IUser extends Document {
   updatedAt: Date;
 
   roadmap: Roadmap;
+
+  isAdmin: boolean;
+  isBlocked: boolean;
 }
 
 // Progress Schema
@@ -104,6 +107,15 @@ const UserSchema: Schema = new Schema(
     // roadmap
     roadmap: {
       type: Object,
+    },
+
+    isAdmin: {
+      type: Boolean,
+      default: false,
+    },
+    isBlocked: {
+      type: Boolean,
+      default: false,
     },
   },
   {

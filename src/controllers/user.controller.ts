@@ -290,7 +290,9 @@ export const getAllUsersController = async (
   try {
     // Fetch all users with roadmap field populated
     const users = await User.find()
-      .select("_id name avatar email roadmap enrolledCourses progress")
+      .select(
+        "_id name avatar email roadmap enrolledCourses progress isBlocked"
+      )
       .populate("enrolledCourses");
 
     const page = parseInt(req.query.page as string, 10) || 1;
@@ -378,6 +380,7 @@ export const getAllUsersController = async (
             trackName,
           },
           enrolledCourses: courseProgress,
+          isBlocked: user.isBlocked,
         };
       })
     );
@@ -497,6 +500,31 @@ export const getSingleUserDashboardController = async (
         createdAt: user.createdAt,
       })
     );
+  } catch (err) {
+    next(err);
+  }
+};
+
+// make user Blocked
+export const blockUserController = async (
+  req: Request,
+  res: Response,
+  next: NextFunction
+) => {
+  try {
+    const id = req.params.id as string;
+    const user = await findUserById(id);
+    if (!user) throw new AppError("User not found", 400);
+    user.isBlocked = !user.isBlocked;
+    await user.save();
+    res
+      .status(200)
+      .json(
+        formatRes(
+          user.isBlocked ? "Blocked successfully" : "Unblocked successfully",
+          user
+        )
+      );
   } catch (err) {
     next(err);
   }
