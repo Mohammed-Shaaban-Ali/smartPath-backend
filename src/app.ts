@@ -23,16 +23,28 @@ import { configurePassport } from "./utils/passport-setup.util";
 
 const app: Application = express();
 
-// CORS Configuration - Fix the CORS issue
-const corsOptions = {
-  origin: true, // Allow all origins in development, specify your frontend URL in production
-  credentials: true, // Allow cookies to be sent
-  methods: ["GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS"],
-  allowedHeaders: ["Content-Type", "Authorization", "X-Requested-With"],
-};
+// CORS Configuration - More aggressive fix
+app.use((req, res, next) => {
+  res.header("Access-Control-Allow-Origin", "*"); // Allow all origins
+  res.header(
+    "Access-Control-Allow-Methods",
+    "GET,PUT,POST,DELETE,PATCH,OPTIONS"
+  );
+  res.header(
+    "Access-Control-Allow-Headers",
+    "Content-Type, Authorization, Content-Length, X-Requested-With, Accept, Origin"
+  );
+  res.header("Access-Control-Allow-Credentials", "true");
+
+  // Handle preflight requests
+  if (req.method === "OPTIONS") {
+    res.sendStatus(200);
+  } else {
+    next();
+  }
+});
 
 // Middlewares
-app.use(cors(corsOptions)); // Apply CORS to all routes
 app.use(express.json());
 
 // TESTING API
