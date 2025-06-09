@@ -1,6 +1,16 @@
 import mongoose, { Schema, Document } from "mongoose";
 // roadmap
-export type typeOfLink = "course" | "single_video" | "article" | "project";
+export type typeOfLink =
+  | "course"
+  | "single_video"
+  | "documentation"
+  | "pdf"
+  | "book"
+  | "tutorial"
+  | "practice"
+  | "project"
+  | "article"
+  | "tool";
 type Roadmap = {
   title: string;
   introduction: string;

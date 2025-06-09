@@ -1,6 +1,27 @@
 import { z } from "zod";
 
-const typeOfLinkEnum = z.enum(["course", "single_video", "article", "project"]);
+// | "course"
+// | "single_video"
+// | "documentation"
+// | "pdf"
+// | "book"
+// | "tutorial"
+// | "practice"
+// | "project"
+// | "article"
+// | "tool"
+const typeOfLinkEnum = z.enum([
+  "course",
+  "single_video",
+  "documentation",
+  "pdf",
+  "book",
+  "tutorial",
+  "practice",
+  "project",
+  "article",
+  "tool",
+]);
 
 const itemSchema = z.object({
   title: z.string(),
