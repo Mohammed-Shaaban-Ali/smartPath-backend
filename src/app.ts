@@ -25,14 +25,7 @@ const app: Application = express();
 
 // Middlewares
 app.use(express.json());
-app.use(
-  cors({
-    origin: "*",
-    methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
-    allowedHeaders: ["Content-Type", "Authorization"],
-    optionsSuccessStatus: 200, // <--- ضيف السطر ده
-  })
-);
+app.use(cors());
 
 // TESTING API
 configurePassport(passport);
