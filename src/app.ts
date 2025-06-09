@@ -25,7 +25,7 @@ const app: Application = express();
 
 // Middlewares
 app.use(express.json());
-app.use(cors());
+app.options("*", cors());
 
 // TESTING API
 configurePassport(passport);
