@@ -25,15 +25,13 @@ const app: Application = express();
 
 // Middlewares
 app.use(express.json());
-// CORS configuration
 app.use(
   cors({
-    origin: "https://smartpath-frontend.vercel.app",
-    credentials: true, // if you're using cookies, authorization headers, etc.
+    origin: "*",
+    methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
+    allowedHeaders: ["Content-Type", "Authorization"],
   })
 );
-
-app.options("*", cors()); // for preflight requests
 
 // TESTING API
 configurePassport(passport);
