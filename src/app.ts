@@ -4,8 +4,8 @@ import cors from "cors";
 import formatRes from "./utils/format-res.util";
 import errorHandler from "./middlewares/error-handler.middleware";
 import AppError from "./utils/app-error.util";
-// Routes imports
 
+// Routes imports
 import authenticationRouter from "./routers/authentication.router";
 import userRouter from "./routers/user.router";
 import sectionRouter from "./routers/section.router";
@@ -23,9 +23,17 @@ import { configurePassport } from "./utils/passport-setup.util";
 
 const app: Application = express();
 
+// CORS Configuration - Fix the CORS issue
+const corsOptions = {
+  origin: true, // Allow all origins in development, specify your frontend URL in production
+  credentials: true, // Allow cookies to be sent
+  methods: ["GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS"],
+  allowedHeaders: ["Content-Type", "Authorization", "X-Requested-With"],
+};
+
 // Middlewares
+app.use(cors(corsOptions)); // Apply CORS to all routes
 app.use(express.json());
-app.options("*", cors());
 
 // TESTING API
 configurePassport(passport);
@@ -47,6 +55,7 @@ app.use(`${API_PREFIX}/dashboard`, DashboardRouter);
 app.get("/", (req, res) => {
   res.status(200).json(formatRes("API server is running..."));
 });
+
 app.get("/test", (req, res) => {
   res.status(200).json(formatRes("test server is running..."));
 });
