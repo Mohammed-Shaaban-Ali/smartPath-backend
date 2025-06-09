@@ -4,7 +4,7 @@ export interface IRoadmap extends Document {
   title: string;
   icon: string;
   link: string;
-  truck: mongoose.Schema.Types.ObjectId; // Reference to Framework
+  Track: mongoose.Schema.Types.ObjectId; // Reference to Framework
   createdAt: Date;
   updatedAt: Date;
 }
@@ -14,9 +14,9 @@ const RoadmapSchema: Schema = new Schema(
     title: { type: String, required: true },
     icon: { type: String, required: false }, // Cloudinary Image URL
     link: { type: String, required: true }, // External roadmap link
-    truck: {
+    Track: {
       type: Schema.Types.ObjectId,
-      ref: "Truck",
+      ref: "Track",
       required: true,
     },
   },
