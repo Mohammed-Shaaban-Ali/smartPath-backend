@@ -4,8 +4,8 @@ import cors from "cors";
 import formatRes from "./utils/format-res.util";
 import errorHandler from "./middlewares/error-handler.middleware";
 import AppError from "./utils/app-error.util";
-
 // Routes imports
+
 import authenticationRouter from "./routers/authentication.router";
 import userRouter from "./routers/user.router";
 import sectionRouter from "./routers/section.router";
@@ -23,29 +23,17 @@ import { configurePassport } from "./utils/passport-setup.util";
 
 const app: Application = express();
 
-// CORS Configuration - More aggressive fix
-app.use((req, res, next) => {
-  res.header("Access-Control-Allow-Origin", "*"); // Allow all origins
-  res.header(
-    "Access-Control-Allow-Methods",
-    "GET,PUT,POST,DELETE,PATCH,OPTIONS"
-  );
-  res.header(
-    "Access-Control-Allow-Headers",
-    "Content-Type, Authorization, Content-Length, X-Requested-With, Accept, Origin"
-  );
-  res.header("Access-Control-Allow-Credentials", "true");
-
-  // Handle preflight requests
-  if (req.method === "OPTIONS") {
-    res.sendStatus(200);
-  } else {
-    next();
-  }
-});
-
 // Middlewares
 app.use(express.json());
+// CORS configuration
+app.use(
+  cors({
+    origin: "https://smartpath-frontend.vercel.app",
+    credentials: true, // if you're using cookies, authorization headers, etc.
+  })
+);
+
+app.options("*", cors()); // for preflight requests
 
 // TESTING API
 configurePassport(passport);
@@ -67,7 +55,6 @@ app.use(`${API_PREFIX}/dashboard`, DashboardRouter);
 app.get("/", (req, res) => {
   res.status(200).json(formatRes("API server is running..."));
 });
-
 app.get("/test", (req, res) => {
   res.status(200).json(formatRes("test server is running..."));
 });
