@@ -10,7 +10,7 @@ import { paginateArray } from "../utils/paginate";
  * Get all tracks
  */
 export const getTracks = asyncHandler(async (_req: Request, res: Response) => {
-  const tracks = await Track.find().populate("section");
+  const tracks = await Track.find();
   res.status(200).json(formatRes("Tracks fetched successfully", { tracks }));
 });
 
@@ -29,7 +29,7 @@ export const getTracksForSelect = asyncHandler(
  */
 export const getTrackById = asyncHandler(
   async (req: Request, res: Response) => {
-    const track = await Track.findById(req.params.id).populate("section");
+    const track = await Track.findById(req.params.id);
     if (!track) throw new AppError("Track not found", 404);
 
     res.status(200).json(formatRes("Track fetched successfully", { track }));
@@ -129,7 +129,7 @@ export const getAllTracks = asyncHandler(
     const page = parseInt(req.query.page as string, 10) || 1;
     const limit = parseInt(req.query.limit as string, 10) || 10;
 
-    const tracks = await Track.find().populate("section");
+    const tracks = await Track.find();
     const paginatedTracks = paginateArray(tracks, page, limit);
 
     res
@@ -141,7 +141,7 @@ export const getAllTracks = asyncHandler(
 // get single track for dashboard
 export const getSingleTrack = asyncHandler(
   async (req: Request, res: Response) => {
-    const track = await Track.findById(req.params.id).populate("section");
+    const track = await Track.findById(req.params.id);
     if (!track) throw new AppError("Track not found", 404);
 
     res.status(200).json(formatRes("Track fetched successfully", track));

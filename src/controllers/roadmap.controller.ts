@@ -14,7 +14,7 @@ export const getRoadmaps = async (
   next: NextFunction
 ) => {
   try {
-    const roadmaps = await Roadmap.find().populate("framework"); // Populate Framework details
+    const roadmaps = await Roadmap.find().populate("truck"); // Populate truck details
     res.json(formatRes("Roadmaps fetched successfully", { roadmaps }));
   } catch (err) {
     next(err);
@@ -30,7 +30,7 @@ export const getRoadmapById = async (
   next: NextFunction
 ) => {
   try {
-    const roadmap = await Roadmap.findById(req.params.id).populate("framework");
+    const roadmap = await Roadmap.findById(req.params.id).populate("truck");
     if (!roadmap) throw new AppError("Roadmap not found", 404);
     res.json(formatRes("Roadmap fetched successfully", { roadmap }));
   } catch (err) {
@@ -47,9 +47,9 @@ export const createRoadmap = async (
   next: NextFunction
 ) => {
   try {
-    const { title, link, framework } = req.body;
-    if (!title || !link || !framework) {
-      throw new AppError("Title, link, and framework are required", 400);
+    const { title, link, truck } = req.body;
+    if (!title || !link || !truck) {
+      throw new AppError("Title, link, and truck are required", 400);
     }
 
     let iconUrl = "";
@@ -63,7 +63,7 @@ export const createRoadmap = async (
       iconUrl = result.secure_url;
     }
 
-    const roadmap = new Roadmap({ title, link, framework, icon: iconUrl });
+    const roadmap = new Roadmap({ title, link, truck, icon: iconUrl });
     await roadmap.save();
     res
       .status(201)
@@ -82,8 +82,8 @@ export const updateRoadmap = async (
   next: NextFunction
 ) => {
   try {
-    const { title, link, framework } = req.body;
-    let updateData: any = { title, link, framework };
+    const { title, link, truck } = req.body;
+    let updateData: any = { title, link, truck };
 
     // Upload new icon image if provided
     if (req.file) {
@@ -136,7 +136,7 @@ export const getAllRoadmaps = async (
     const page = parseInt(req.query.page as string, 10) || 1;
     const limit = parseInt(req.query.limit as string, 10) || 10;
 
-    const roadmaps = await Roadmap.find().populate("framework"); // Populate Framework details
+    const roadmaps = await Roadmap.find().populate("truck"); // Populate truck details
     const paginatedRoadmaps = paginateArray(roadmaps, page, limit);
 
     res.json(formatRes("Roadmaps fetched successfully", paginatedRoadmaps));
@@ -152,7 +152,7 @@ export const getSingleRoadmap = async (
   next: NextFunction
 ) => {
   try {
-    const roadmap = await Roadmap.findById(req.params.id).populate("framework");
+    const roadmap = await Roadmap.findById(req.params.id).populate("truck");
     res.json(formatRes("Roadmap fetched successfully", roadmap));
   } catch (err) {
     next(err);
