@@ -25,7 +25,7 @@ const app: Application = express();
 app.use(express.json());
 app.use(
   cors({
-    origin: "https://smartpath-frontend.vercel.app",
+    origin: ["https://smartpath-frontend.vercel.app"],
     credentials: true,
     methods: ["GET", "POST", "PUT", "DELETE"],
   })
@@ -50,7 +50,7 @@ app.get("/", (req, res) => {
   res.status(200).json(formatRes("API server is running..."));
 });
 app.get("/test", (req, res) => {
-  res.status(200).json(formatRes("test server is running..."));
+  res.status(200).json(formatRes("a7a ana is running..."));
 });
 
 // Not-Found
