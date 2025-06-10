@@ -256,7 +256,6 @@ function parseDurationToMinutes(durationStr: string): number {
       value: parseFloat(parts[0]),
       unit: end ? end.unit : "minutes",
     };
-    console.log(start, end);
     if (start && end) {
       if (start.unit === end.unit) {
         const avg = (start.value + end.value) / 2;
