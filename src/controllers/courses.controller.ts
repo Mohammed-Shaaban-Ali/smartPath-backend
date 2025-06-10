@@ -426,7 +426,6 @@ export const getCourseWithProgress = asyncHandler(
       return;
     }
 
-    // Check if user enrolled in course
     const isEnrolled = course.enrolledUsers.some(
       (id: any) => id.toString() === userId
     );
@@ -440,10 +439,17 @@ export const getCourseWithProgress = asyncHandler(
       (p: any) => p.course.toString() === courseId
     );
 
+    let totalVideos = 0;
+    let watchedVideosCount = 0;
+
     const sections = course.sections.map((section: any) => {
       const videos = section.videos.map((video: any) => {
         const watched =
           progress?.watchedVideos.includes(video._id.toString()) || false;
+
+        if (watched) watchedVideosCount++;
+        totalVideos++;
+
         return { ...video.toObject(), watched };
       });
 
@@ -452,9 +458,7 @@ export const getCourseWithProgress = asyncHandler(
     });
 
     // Get top 3 ratings (by latest added — reverse order)
-    const top3Ratings = course.ratings
-      .slice(-3) // last 3
-      .reverse();
+    const top3Ratings = course.ratings.slice(-3).reverse();
 
     // Calculate average rating
     const averageRating =
@@ -467,7 +471,12 @@ export const getCourseWithProgress = asyncHandler(
           ).toFixed(1)
         : 5;
 
-    // Prepare final course data without enrolledUsers
+    // حساب نسبة الإنجاز
+    const progressPercentage =
+      totalVideos > 0
+        ? ((watchedVideosCount / totalVideos) * 100).toFixed(1)
+        : "0";
+
     const { enrolledUsers, ratings, ...courseData } = course.toObject();
 
     res.status(200).json(
@@ -477,6 +486,7 @@ export const getCourseWithProgress = asyncHandler(
           sections,
           topRatings: top3Ratings,
           averageRating,
+          progressPercentage, // 📌 أضفنا النسبة هنا
         },
       })
     );
