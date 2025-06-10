@@ -155,18 +155,20 @@ export const markItemAsCompleted = async (
 
     const step = user.roadmap.steps.find((s) => s.step_number == stepNumber);
     if (!step) throw new AppError("Step not found", 404);
+
     const category = step.categories.find(
       (c) => c.category_title == categoryTitle
     );
     if (!category) throw new AppError("Category not found", 404);
+
     const item = category.items.find((i) => i.title == itemTitle);
     if (!item) throw new AppError("Item not found", 404);
+
     item.completed = true;
 
     // Check if all items in category are completed
     const allItemsCompleted = category.items.every((i) => i.completed);
     if (allItemsCompleted) {
-      // Optionally: mark step as completed if all items in all categories are done
       const allCategoriesCompleted = step.categories.every((cat) =>
         cat.items.every((it) => it.completed)
       );
@@ -174,9 +176,61 @@ export const markItemAsCompleted = async (
         step.completed = true;
       }
     }
+
     user.markModified("roadmap");
     await user.save();
-    res.status(200).json(formatRes("Item marked as completed", user.roadmap));
+
+    // احسب progress لكل step
+    const stepsWithProgress = user.roadmap.steps.map((s) => {
+      let stepTotalDuration = 0;
+      let stepCompletedDuration = 0;
+
+      s.categories.forEach((cat) => {
+        cat.items.forEach((it) => {
+          const dur = parseDurationToMinutes(it.duration || "0 minutes");
+          stepTotalDuration += dur;
+          if (it.completed) {
+            stepCompletedDuration += dur;
+          }
+        });
+      });
+
+      const stepProgress =
+        stepTotalDuration > 0
+          ? (stepCompletedDuration / stepTotalDuration) * 100
+          : 0;
+
+      return {
+        step_number: s.step_number,
+        progressPercent: Math.round(stepProgress * 100) / 100,
+      };
+    });
+
+    // احسب total progress
+    let totalDuration = 0;
+    let completedDuration = 0;
+    user.roadmap.steps.forEach((s) => {
+      s.categories.forEach((cat) => {
+        cat.items.forEach((it) => {
+          const dur = parseDurationToMinutes(it.duration || "0 minutes");
+          totalDuration += dur;
+          if (it.completed) {
+            completedDuration += dur;
+          }
+        });
+      });
+    });
+
+    const totalProgress =
+      totalDuration > 0 ? (completedDuration / totalDuration) * 100 : 0;
+
+    res.status(200).json(
+      formatRes("Item marked as completed", {
+        roadmap: user.roadmap,
+        progresspercent: Math.round(totalProgress * 100) / 100,
+        stepsProgress: stepsWithProgress,
+      })
+    );
   } catch (err) {
     next(err);
   }
@@ -186,7 +240,6 @@ function parseDurationToMinutes(durationStr: string): number {
   durationStr = durationStr.trim().toLowerCase();
 
   let parts = durationStr.split("-").map((s) => s.trim());
-
   function extractNumAndUnit(str: string) {
     const match = str.match(
       /([\d\.]+)\s*(minute|minutes|hour|hours|week|weeks)/
@@ -247,32 +300,47 @@ export const getUserRoadmapController = async (
 
     const user = await findUserById(userId);
     if (!user) throw new AppError("User not found", 404);
+    if (!user.roadmap) throw new AppError("User roadmap not found", 404);
 
-    let totalDuration = 0; // بالدقائق
-    let completedDuration = 0; // بالدقائق
+    let totalDuration = 0;
+    let completedDuration = 0;
 
-    // نمر على كل steps، كل category، كل item ونجمع المدد ونحسب المكتمل
-    user.roadmap.steps.forEach((step) => {
+    const stepsWithProgress = user.roadmap.steps.map((step) => {
+      let stepTotalDuration = 0;
+      let stepCompletedDuration = 0;
+
       step.categories.forEach((category) => {
         category.items.forEach((item) => {
           const dur = parseDurationToMinutes(item.duration || "0 minutes");
           totalDuration += dur;
+          stepTotalDuration += dur;
+
           if (item.completed) {
             completedDuration += dur;
+            stepCompletedDuration += dur;
           }
         });
       });
+
+      const stepProgress =
+        stepTotalDuration > 0
+          ? (stepCompletedDuration / stepTotalDuration) * 100
+          : 0;
+
+      return {
+        step_number: step.step_number,
+        progressPercent: Math.round(stepProgress * 100) / 100,
+      };
     });
 
-    // نحسب النسبة
-    const progressPercent =
+    const totalProgress =
       totalDuration > 0 ? (completedDuration / totalDuration) * 100 : 0;
 
-    // ممكن تضيف النسبة مع الرد
     res.status(200).json(
       formatRes("User roadmap fetched successfully", {
-        ...user.roadmap,
-        progressPercent: Math.round(progressPercent * 100) / 100, // تقريب لـ 2 رقم عشري
+        roadmap: user.roadmap,
+        progresspercent: Math.round(totalProgress * 100) / 100,
+        stepsProgress: stepsWithProgress,
       })
     );
   } catch (err) {
