@@ -4,6 +4,12 @@ const videoSchema = new mongoose.Schema({
   title: String,
   videoUrl: String,
   duration: Number,
+  videoType: {
+    type: String,
+    enum: ["upload", "youtube"],
+    default: "upload",
+  },
+  youtubeId: String, // Store YouTube video ID for easier embedding
 });
 
 const sectionSchema = new mongoose.Schema({

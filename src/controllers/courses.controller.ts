@@ -10,11 +10,20 @@ import { paginateArray } from "../utils/paginate";
 import { markItemAsCompleted } from "./user.controller";
 import AppError from "../utils/app-error.util";
 
-// types
+// Utility function to extract YouTube video ID from URL
+const extractYouTubeId = (url: string): string | null => {
+  const regExp = /^.*(youtu.be\/|v\/|u\/\w\/|embed\/|watch\?v=|&v=)([^#&?]*).*/;
+  const match = url.match(regExp);
+  return match && match[2].length === 11 ? match[2] : null;
+};
+
+// Updated types
 interface Video {
   title: string;
   duration: number;
   videoUrl?: string;
+  videoType?: "upload" | "youtube";
+  youtubeId?: string;
 }
 
 interface Section {
@@ -32,9 +41,10 @@ interface CreateCourseRequest extends Request {
     title: string;
     description: string;
     sections: string;
-    track: string; // Assuming track is a string ID
+    track: string;
   };
 }
+
 interface UpdateCourseRequest extends Request {
   files?:
     | Express.Multer.File[]
@@ -48,7 +58,8 @@ interface UpdateCourseRequest extends Request {
     track?: string;
   };
 }
-// Create Course with videos and image upload
+
+// Create Course with videos (uploaded or YouTube) and image upload
 export const createCourse = async (
   req: CreateCourseRequest,
   res: Response,
@@ -67,14 +78,16 @@ export const createCourse = async (
       return;
     }
 
-    let imageUrl;
-    let videoUrl: string[] = [];
+    let imageUrl: string | undefined;
+    let uploadedVideoUrls: string[] = [];
+
+    // Process uploaded files
     (req.files as Express.Multer.File[])?.forEach(
       (file: Express.Multer.File) => {
         if (file.fieldname === "image") {
           imageUrl = file.path;
         } else if (file.fieldname.includes("video")) {
-          videoUrl.push(file.path);
+          uploadedVideoUrls.push(file.path);
         }
       }
     );
@@ -84,25 +97,49 @@ export const createCourse = async (
     }
 
     const parsedSections: Section[] = JSON.parse(sections);
-
     let totalCourseDuration = 0;
+    let uploadedVideoIndex = 0;
 
-    const finalSections = parsedSections.map((section, index) => {
+    const finalSections = parsedSections.map((section, sectionIndex) => {
       let sectionDuration = 0;
 
       const videos = section.videos.map((vid, vidIndex) => {
-        if (!videoUrl[vidIndex]) {
-          console.log(
-            `Video not uploaded correctly for section-${index}-video-${vidIndex}`
-          );
-        }
-
         sectionDuration += vid.duration;
 
-        return {
-          ...vid,
-          videoUrl: videoUrl[vidIndex] || "",
-        };
+        // Check if this is a YouTube video or uploaded video
+        if (vid.videoType === "youtube" && vid.videoUrl) {
+          // Extract YouTube ID from URL
+          const youtubeId = extractYouTubeId(vid.videoUrl);
+          if (!youtubeId) {
+            console.log(
+              `Invalid YouTube URL for section-${sectionIndex}-video-${vidIndex}`
+            );
+          }
+
+          return {
+            title: vid.title,
+            duration: vid.duration,
+            videoUrl: vid.videoUrl,
+            videoType: "youtube" as const,
+            youtubeId: youtubeId || "",
+          };
+        } else {
+          // Handle uploaded video
+          const uploadedUrl = uploadedVideoUrls[uploadedVideoIndex];
+          if (!uploadedUrl) {
+            console.log(
+              `Video not uploaded correctly for section-${sectionIndex}-video-${vidIndex}`
+            );
+          }
+          uploadedVideoIndex++;
+
+          return {
+            title: vid.title,
+            duration: vid.duration,
+            videoUrl: uploadedUrl || "",
+            videoType: "upload" as const,
+          };
+        }
       });
 
       totalCourseDuration += sectionDuration;
@@ -132,7 +169,7 @@ export const createCourse = async (
   }
 };
 
-// --- Update Course ---
+// Update Course
 export const updateCourse = async (
   req: UpdateCourseRequest,
   res: Response,
@@ -158,13 +195,14 @@ export const updateCourse = async (
     }
 
     let imageUrl: string | undefined;
-    let videoUrl: string[] = [];
+    let uploadedVideoUrls: string[] = [];
 
+    // Process uploaded files
     (req.files as Express.Multer.File[])?.forEach((file) => {
       if (file.fieldname === "image") {
         imageUrl = file.path;
       } else if (file.fieldname.includes("video")) {
-        videoUrl.push(file.path);
+        uploadedVideoUrls.push(file.path);
       }
     });
 
@@ -175,16 +213,42 @@ export const updateCourse = async (
     if (sections) {
       const parsedSections: Section[] = JSON.parse(sections);
       let totalCourseDuration = 0;
+      let uploadedVideoIndex = 0;
 
-      const finalSections = parsedSections.map((section, index) => {
+      const finalSections = parsedSections.map((section, sectionIndex) => {
         let sectionDuration = 0;
 
         const videos = section.videos.map((vid, vidIndex) => {
           sectionDuration += vid.duration;
-          return {
-            ...vid,
-            videoUrl: videoUrl[vidIndex] || vid.videoUrl || "",
-          };
+
+          if (vid.videoType === "youtube" && vid.videoUrl) {
+            // Handle YouTube video
+            const youtubeId = extractYouTubeId(vid.videoUrl);
+            if (!youtubeId) {
+              console.log(
+                `Invalid YouTube URL for section-${sectionIndex}-video-${vidIndex}`
+              );
+            }
+
+            return {
+              title: vid.title,
+              duration: vid.duration,
+              videoUrl: vid.videoUrl,
+              videoType: "youtube" as const,
+              youtubeId: youtubeId || "",
+            };
+          } else {
+            // Handle uploaded video - use new upload or keep existing
+            const newUploadedUrl = uploadedVideoUrls[uploadedVideoIndex];
+            uploadedVideoIndex++;
+
+            return {
+              title: vid.title,
+              duration: vid.duration,
+              videoUrl: newUploadedUrl || vid.videoUrl || "",
+              videoType: "upload" as const,
+            };
+          }
         });
 
         totalCourseDuration += sectionDuration;
