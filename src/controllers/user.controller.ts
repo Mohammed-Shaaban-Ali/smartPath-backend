@@ -250,23 +250,33 @@ function parseDurationToMinutes(durationStr: string): number {
       unit: match[2],
     };
   }
-
-  if (parts.length === 2) {
-    const start = extractNumAndUnit(parts[0]);
+  if (parts.length == 2) {
     const end = extractNumAndUnit(parts[1]);
-
+    const start = {
+      value: parseFloat(parts[0]),
+      unit: end ? end.unit : "minutes",
+    };
+    console.log(start, end);
     if (start && end) {
       if (start.unit === end.unit) {
         const avg = (start.value + end.value) / 2;
         return convertToMinutes(avg, start.unit);
       } else {
         const startMin = convertToMinutes(start.value, start.unit);
+        console.log(
+          startMin,
+          "startMin for ",
+          start.value,
+          " unit ",
+          start.unit
+        );
         const endMin = convertToMinutes(end.value, end.unit);
         return (startMin + endMin) / 2;
       }
     }
   } else {
     const single = extractNumAndUnit(durationStr);
+
     if (single) {
       return convertToMinutes(single.value, single.unit);
     }
@@ -284,7 +294,7 @@ function convertToMinutes(value: number, unit: string): number {
       return value * 60;
     case "week":
     case "weeks":
-      return value * 7 * 8 * 60; // 7 أيام × 8 ساعات دراسة × 60 دقيقة
+      return value * 5 * 8 * 60; // 7 أيام × 8 ساعات دراسة × 60 دقيقة
     default:
       return 0;
   }
