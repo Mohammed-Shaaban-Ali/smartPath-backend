@@ -27,6 +27,7 @@ app.use(
   cors({
     origin: "https://smartpath-frontend.vercel.app",
     credentials: true,
+    methods: ["GET", "POST", "PUT", "DELETE"],
   })
 );
 
