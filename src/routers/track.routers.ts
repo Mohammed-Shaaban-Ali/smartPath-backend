@@ -23,18 +23,12 @@ router.get("/dashboard/:id", authMiddleware, getSingleTrack);
 router.get("/:id", getTrackById);
 router.post(
   "/",
-  uploadImage.fields([
-    { name: "icon", maxCount: 1 },
-    { name: "icon3D", maxCount: 1 },
-  ]),
+  uploadImage.fields([{ name: "icon", maxCount: 1 }]),
   createTrack
 );
 router.put(
   "/:id",
-  uploadImage.fields([
-    { name: "icon", maxCount: 1 },
-    { name: "icon3D", maxCount: 1 },
-  ]),
+  uploadImage.fields([{ name: "icon", maxCount: 1 }]),
   updateTrack
 );
 router.delete("/:id", deleteTrack);

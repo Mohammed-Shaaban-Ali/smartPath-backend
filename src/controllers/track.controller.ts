@@ -64,7 +64,6 @@ export const createTrack = asyncHandler(async (req: Request, res: Response) => {
   if (!title || !body) throw new AppError("Title and body are required", 400);
 
   let iconUrl = "";
-  let icon3DUrl = "";
 
   if (req.files) {
     const files = req.files as { [fieldname: string]: Express.Multer.File[] };
@@ -75,19 +74,11 @@ export const createTrack = asyncHandler(async (req: Request, res: Response) => {
       });
       iconUrl = result.secure_url;
     }
-    if (files.icon3D) {
-      const result3D = await cloudinary.uploader.upload(files.icon3D[0].path, {
-        folder: "tracks",
-        resource_type: "image",
-      });
-      icon3DUrl = result3D.secure_url;
-    }
   }
 
   const track = await Track.create({
     title,
     icon: iconUrl,
-    icon3D: icon3DUrl,
     body,
   });
   res.status(201).json(formatRes("Track created successfully", { track }));
@@ -108,13 +99,6 @@ export const updateTrack = asyncHandler(async (req: Request, res: Response) => {
         resource_type: "image",
       });
       updateData.icon = result.secure_url;
-    }
-    if (files.icon3D) {
-      const result3D = await cloudinary.uploader.upload(files.icon3D[0].path, {
-        folder: "tracks",
-        resource_type: "image",
-      });
-      updateData.icon3D = result3D.secure_url;
     }
   }
 
