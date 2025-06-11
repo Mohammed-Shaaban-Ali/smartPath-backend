@@ -5,13 +5,26 @@ import AppError from "../utils/app-error.util";
 import formatRes from "../utils/format-res.util";
 import asyncHandler from "../utils/async-handler.util";
 import { paginateArray } from "../utils/paginate";
+import Roadmap from "../models/Roadmap";
 
 /**
  * Get all tracks
  */
-export const getTracks = asyncHandler(async (_req: Request, res: Response) => {
-  const tracks = await Track.find();
-  res.status(200).json(formatRes("Tracks fetched successfully", { tracks }));
+
+export const getTracks = asyncHandler(async (req: Request, res: Response) => {
+  const search = (req.query.search as string) || "";
+  const page = parseInt(req.query.page as string, 10) || 1;
+  const limit = parseInt(req.query.limit as string, 10) || 10;
+  const query = search
+    ? {
+        title: { $regex: search, $options: "i" },
+      }
+    : {};
+
+  const tracks = await Track.find(query).select("title icon _id");
+  const paginated = paginateArray(tracks, page, limit);
+
+  res.status(200).json(formatRes("Tracks fetched successfully", paginated));
 });
 
 /**
@@ -31,8 +44,15 @@ export const getTrackById = asyncHandler(
   async (req: Request, res: Response) => {
     const track = await Track.findById(req.params.id);
     if (!track) throw new AppError("Track not found", 404);
-
-    res.status(200).json(formatRes("Track fetched successfully", { track }));
+    const roadmapswithThisTrack = await Roadmap.find({
+      track: req.params.id,
+    }).select("title icon link _id");
+    res.status(200).json(
+      formatRes("Track fetched successfully", {
+        track,
+        roadmaps: roadmapswithThisTrack,
+      })
+    );
   }
 );
 

@@ -54,6 +54,8 @@
     "@types/passport-facebook": "^3.0.3",
     "@types/passport-google-oauth": "^1.0.45",
     "@types/passport-google-oauth20": "^2.0.16",
+    "@types/pdf-parse": "^1.1.5",
+    "@types/pdfkit": "^0.13.9",
     "@types/socket.io": "^3.0.1",
     "@types/swagger-jsdoc": "^6.0.4",
     "@types/swagger-ui-express": "^4.1.8",

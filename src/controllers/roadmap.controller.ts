@@ -9,13 +9,53 @@ import { paginateArray } from "../utils/paginate";
  * Get all roadmaps
  */
 export const getRoadmaps = async (
-  _req: Request,
+  req: Request,
   res: Response,
   next: NextFunction
 ) => {
   try {
-    const roadmaps = await Roadmap.find().populate("track"); // Populate track details
-    res.json(formatRes("Roadmaps fetched successfully", { roadmaps }));
+    const search = (req.query.search as string) || "";
+    const page = parseInt(req.query.page as string, 10) || 1;
+    const limit = parseInt(req.query.limit as string, 10) || 10;
+
+    const pipeline: any[] = [
+      {
+        $lookup: {
+          from: "tracks",
+          localField: "track",
+          foreignField: "_id",
+          as: "track",
+        },
+      },
+      { $unwind: "$track" },
+      {
+        $match: {
+          $or: [
+            { title: { $regex: search, $options: "i" } },
+            { "track.title": { $regex: search, $options: "i" } },
+          ],
+        },
+      },
+    ];
+
+    const roadmaps = await Roadmap.aggregate(pipeline);
+    const paginated = paginateArray(roadmaps, page, limit);
+    const sendObject = paginated?.items?.map((roadmap: any) => ({
+      _id: roadmap._id,
+      title: roadmap.title,
+      link: roadmap.link,
+      icon: roadmap.icon,
+      track: roadmap.track?.title,
+    }));
+
+    res.json(
+      formatRes("Roadmaps fetched successfully", {
+        items: sendObject,
+        totalPages: paginated?.totalPages,
+        totalItems: paginated?.totalItems,
+        currentPage: paginated?.currentPage,
+      })
+    );
   } catch (err) {
     next(err);
   }
