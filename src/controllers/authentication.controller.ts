@@ -272,6 +272,67 @@ export const loginController = async (
   }
 };
 
+export const loginAdminController = async (
+  req: Request,
+  res: Response,
+  next: NextFunction
+) => {
+  try {
+    const { email, password } = req.body;
+
+    // Input validations
+    if (!email) throw new AppError("Email is required", 400);
+    if (!password) throw new AppError("Password is required", 400);
+
+    // Find the user by email
+    const user = await getUserByEmail(email);
+    if (!user) throw new AppError("User not found", 400);
+
+    // Check if the user is verified
+    if (!user.isVerified) {
+      throw new AppError("Please verify your email before logging in", 401);
+    }
+    if (user.isBlocked) {
+      throw new AppError("User is blocked", 401);
+    }
+    if (user.isAdmin) {
+      throw new AppError("User Not Admin", 401);
+    }
+    // Compare the password with the hashed password
+    const isPasswordValid = await bcrypt.compare(password, user.password!);
+
+    if (!isPasswordValid) {
+      throw new AppError("Invalid credentials", 401);
+    }
+
+    // Generate JWT token
+    const token = signToken({ userId: user.id, email: user.email });
+
+    // Remove sensitive data (password, OTP) from the user object before sending
+    const {
+      password: storedPassword,
+      otp,
+      otpExpiration,
+      ...loginedUser
+    } = user.toObject();
+
+    // Send success response
+    res.status(200).json(
+      formatRes("Login Done Successfully", {
+        user: {
+          _id: loginedUser._id,
+          email: loginedUser.email,
+          name: loginedUser.name,
+          avatar: loginedUser.avatar,
+        },
+        token,
+      })
+    );
+  } catch (err) {
+    next(err);
+  }
+};
+
 export const socialMediaController = (
   req: Request,
   res: Response,

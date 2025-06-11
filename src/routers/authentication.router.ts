@@ -7,6 +7,7 @@ import {
   forgotPasswordController,
   verifyOTPPasswordController,
   resendOtpController,
+  loginAdminController,
 } from "../controllers/authentication.controller";
 import passport from "passport";
 import { uploadImage } from "../middlewares/upload";
@@ -18,6 +19,7 @@ router.post("/register", uploadImage.single("avatar"), registerController);
 
 // login
 router.post("/login", loginController);
+router.post("/login-admin", loginAdminController);
 
 // verify email
 router.post("/verify-email", verifyEmailController);
