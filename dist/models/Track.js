@@ -37,8 +37,8 @@ const mongoose_1 = __importStar(require("mongoose"));
 const TrackSchema = new mongoose_1.Schema({
     title: { type: String, required: true },
     icon: { type: String, required: true },
-    icon3D: { type: String, required: true },
     body: { type: String, required: true },
-    section: { type: mongoose_1.Schema.Types.ObjectId, ref: "Section", required: true },
+}, {
+    timestamps: true,
 });
 exports.default = mongoose_1.default.model("Track", TrackSchema);

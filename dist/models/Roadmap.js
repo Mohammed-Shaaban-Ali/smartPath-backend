@@ -38,9 +38,9 @@ const RoadmapSchema = new mongoose_1.Schema({
     title: { type: String, required: true },
     icon: { type: String, required: false }, // Cloudinary Image URL
     link: { type: String, required: true }, // External roadmap link
-    framework: {
+    track: {
         type: mongoose_1.Schema.Types.ObjectId,
-        ref: "Framework",
+        ref: "Track",
         required: true,
     },
 }, { timestamps: true });

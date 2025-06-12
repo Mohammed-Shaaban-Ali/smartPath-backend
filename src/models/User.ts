@@ -19,13 +19,13 @@ type Roadmap = {
     step_number: number;
     step_title: string;
     description: string;
-    link: string | null;
+    link?: string | null;
     completed: boolean; // <== NEW
     categories: {
       category_title: string;
       items: {
         title: string;
-        link: string | null;
+        link?: string | null;
         duration: string;
         type_of_link: typeOfLink;
         completed: boolean; // <== NEW

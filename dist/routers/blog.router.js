@@ -9,6 +9,8 @@ const upload_1 = require("../middlewares/upload");
 const router = express_1.default.Router();
 // Get all blogs
 router.get("/", blog_controller_1.getBlogs);
+// get all blogs for dashboard
+router.get("/dashboard", blog_controller_1.getAllBlogs);
 // Get a single blog (increments view count)
 router.get("/:id", blog_controller_1.getBlogById);
 // Create a new blog (supports image upload)

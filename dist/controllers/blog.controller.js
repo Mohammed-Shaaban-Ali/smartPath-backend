@@ -12,11 +12,12 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.deleteBlog = exports.updateBlog = exports.createBlog = exports.getBlogById = exports.getBlogs = void 0;
+exports.getAllBlogs = exports.deleteBlog = exports.updateBlog = exports.createBlog = exports.getBlogById = exports.getBlogs = void 0;
 const Blog_1 = __importDefault(require("../models/Blog"));
 const cloudinary_1 = __importDefault(require("../config/cloudinary"));
 const app_error_util_1 = __importDefault(require("../utils/app-error.util"));
 const format_res_util_1 = __importDefault(require("../utils/format-res.util"));
+const paginate_1 = require("../utils/paginate");
 /**
  * Get all blogs
  */
@@ -117,3 +118,19 @@ const deleteBlog = (req, res, next) => __awaiter(void 0, void 0, void 0, functio
     }
 });
 exports.deleteBlog = deleteBlog;
+/**
+ * ------------Dashboard Controller------------
+ */
+const getAllBlogs = (req, res, next) => __awaiter(void 0, void 0, void 0, function* () {
+    try {
+        const page = parseInt(req.query.page, 10) || 1;
+        const limit = parseInt(req.query.limit, 10) || 10;
+        const blogs = yield Blog_1.default.find().sort({ createdAt: -1 }); // Sort by latest blogs
+        const paginatedBlogs = (0, paginate_1.paginateArray)(blogs, page, limit);
+        res.json((0, format_res_util_1.default)("Blogs fetched successfully", paginatedBlogs));
+    }
+    catch (err) {
+        next(err);
+    }
+});
+exports.getAllBlogs = getAllBlogs;

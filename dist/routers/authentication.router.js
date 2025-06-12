@@ -12,6 +12,7 @@ const router = (0, express_1.Router)();
 router.post("/register", upload_1.uploadImage.single("avatar"), authentication_controller_1.registerController);
 // login
 router.post("/login", authentication_controller_1.loginController);
+router.post("/login-admin", authentication_controller_1.loginAdminController);
 // verify email
 router.post("/verify-email", authentication_controller_1.verifyEmailController);
 // resend OTP

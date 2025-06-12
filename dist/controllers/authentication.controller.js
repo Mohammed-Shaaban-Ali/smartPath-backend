@@ -23,7 +23,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.verifyOTPPasswordController = exports.forgotPasswordController = exports.socialMediaController = exports.loginController = exports.resendOtpController = exports.verifyEmailController = exports.registerController = void 0;
+exports.verifyOTPPasswordController = exports.forgotPasswordController = exports.socialMediaController = exports.loginAdminController = exports.loginController = exports.resendOtpController = exports.verifyEmailController = exports.registerController = void 0;
 const format_res_util_1 = __importDefault(require("../utils/format-res.util"));
 const app_error_util_1 = __importDefault(require("../utils/app-error.util"));
 const bcrypt_1 = __importDefault(require("bcrypt"));
@@ -132,6 +132,7 @@ const verifyEmailController = (req, res, next) => __awaiter(void 0, void 0, void
         res.status(200).json((0, format_res_util_1.default)("Email verified and registration completed successfully", {
             token,
             user: {
+                id: createdUser.id,
                 name: createdUser.name,
                 email: createdUser.email,
                 avatar: createdUser.avatar,
@@ -204,6 +205,9 @@ const loginController = (req, res, next) => __awaiter(void 0, void 0, void 0, fu
         if (!user.isVerified) {
             throw new app_error_util_1.default("Please verify your email before logging in", 401);
         }
+        if (user.isBlocked) {
+            throw new app_error_util_1.default("User is blocked", 401);
+        }
         // Compare the password with the hashed password
         const isPasswordValid = yield bcrypt_1.default.compare(password, user.password);
         if (!isPasswordValid) {
@@ -215,7 +219,12 @@ const loginController = (req, res, next) => __awaiter(void 0, void 0, void 0, fu
         const _a = user.toObject(), { password: storedPassword, otp, otpExpiration } = _a, loginedUser = __rest(_a, ["password", "otp", "otpExpiration"]);
         // Send success response
         res.status(200).json((0, format_res_util_1.default)("Login Done Successfully", {
-            user: loginedUser,
+            user: {
+                _id: loginedUser._id,
+                email: loginedUser.email,
+                name: loginedUser.name,
+                avatar: loginedUser.avatar,
+            },
             token,
         }));
     }
@@ -224,6 +233,53 @@ const loginController = (req, res, next) => __awaiter(void 0, void 0, void 0, fu
     }
 });
 exports.loginController = loginController;
+const loginAdminController = (req, res, next) => __awaiter(void 0, void 0, void 0, function* () {
+    try {
+        const { email, password } = req.body;
+        // Input validations
+        if (!email)
+            throw new app_error_util_1.default("Email is required", 400);
+        if (!password)
+            throw new app_error_util_1.default("Password is required", 400);
+        // Find the user by email
+        const user = yield (0, authentication_service_1.getUserByEmail)(email);
+        if (!user)
+            throw new app_error_util_1.default("User not found", 400);
+        // Check if the user is verified
+        if (!user.isVerified) {
+            throw new app_error_util_1.default("Please verify your email before logging in", 401);
+        }
+        if (user.isBlocked) {
+            throw new app_error_util_1.default("User is blocked", 401);
+        }
+        if (!user.isAdmin) {
+            throw new app_error_util_1.default("User Not Admin", 401);
+        }
+        // Compare the password with the hashed password
+        const isPasswordValid = yield bcrypt_1.default.compare(password, user.password);
+        if (!isPasswordValid) {
+            throw new app_error_util_1.default("Invalid credentials", 401);
+        }
+        // Generate JWT token
+        const token = (0, sign_token_util_1.signToken)({ userId: user.id, email: user.email });
+        // Remove sensitive data (password, OTP) from the user object before sending
+        const _a = user.toObject(), { password: storedPassword, otp, otpExpiration } = _a, loginedUser = __rest(_a, ["password", "otp", "otpExpiration"]);
+        // Send success response
+        res.status(200).json((0, format_res_util_1.default)("Login Done Successfully", {
+            user: {
+                _id: loginedUser._id,
+                email: loginedUser.email,
+                name: loginedUser.name,
+                avatar: loginedUser.avatar,
+            },
+            token,
+        }));
+    }
+    catch (err) {
+        next(err);
+    }
+});
+exports.loginAdminController = loginAdminController;
 const socialMediaController = (req, res, next) => {
     try {
         const user = req.user;

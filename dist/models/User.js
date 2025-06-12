@@ -81,6 +81,18 @@ const UserSchema = new mongoose_1.Schema({
     }, // Cloudinary Image URL
     enrolledCourses: [{ type: mongoose_1.default.Schema.Types.ObjectId, ref: "Course" }],
     progress: [progressSchema],
+    // roadmap
+    roadmap: {
+        type: Object,
+    },
+    isAdmin: {
+        type: Boolean,
+        default: false,
+    },
+    isBlocked: {
+        type: Boolean,
+        default: false,
+    },
 }, {
     timestamps: true,
 });

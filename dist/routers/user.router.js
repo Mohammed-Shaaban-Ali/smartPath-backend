@@ -11,4 +11,15 @@ const router = express_1.default.Router();
 router.put("/", authentication_middleware_1.authMiddleware, upload_1.uploadImage.single("avatar"), user_controller_1.updateUserController);
 router.delete("/", authentication_middleware_1.authMiddleware, user_controller_1.deleteUserController);
 router.put("/reset-password", user_controller_1.updatePasswordController);
+//rodmap
+router.get("/get-roadmap", authentication_middleware_1.authMiddleware, user_controller_1.getUserRoadmapController);
+router.post("/add-roadmap", authentication_middleware_1.authMiddleware, user_controller_1.addRoadmapToUser);
+router.post("/complete-item", authentication_middleware_1.authMiddleware, user_controller_1.markItemAsCompleted);
+// dashboard
+// getAllUsersController
+router.get("/dashboard/users", authentication_middleware_1.authMiddleware, user_controller_1.getAllUsersController);
+// get single user
+router.get("/dashboard/users/:id", authentication_middleware_1.authMiddleware, user_controller_1.getSingleUserDashboardController);
+// block user by id
+router.put("/dashboard/users/block/:id", authentication_middleware_1.authMiddleware, user_controller_1.blockUserController);
 exports.default = router;

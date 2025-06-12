@@ -9,10 +9,14 @@ const upload_1 = require("../middlewares/upload");
 const authentication_middleware_1 = require("../middlewares/authentication.middleware");
 const router = express_1.default.Router();
 // Create course
-router.post("/", upload_1.uploadAny.any(), // كل الملفات بأي اسم
-courses_controller_1.createCourse);
+router.post("/", upload_1.uploadAny.any(), courses_controller_1.createCourse);
 // Get all courses
-router.get("/", courses_controller_1.getCourses);
+router.get("/", authentication_middleware_1.authMiddleware, courses_controller_1.getCourses);
+// get all courses for dashboard
+router.get("/dashboard", authentication_middleware_1.authMiddleware, courses_controller_1.getAllCourses);
+router.post("/dashboard/:id", upload_1.uploadAny.any(), courses_controller_1.updateCourse);
+router.get("/dashboard/:id", authentication_middleware_1.authMiddleware, courses_controller_1.getSingleCourse);
+router.delete("/dashboard/:id", authentication_middleware_1.authMiddleware, courses_controller_1.deleteCourse);
 // Enroll in course
 router.post("/enroll/:courseId", authentication_middleware_1.authMiddleware, courses_controller_1.enrollInCourse);
 // Get user courses

@@ -6,7 +6,7 @@ exports.API_PREFIX = "/api/v1";
 exports.PORT = process.env.PORT;
 exports.MONGO_URI = process.env.MONGO_URI;
 exports.PROD_URL = "https://smart-path-seven.vercel.app/api/v1";
-exports.LOCAL_URL = `http://localhost:2530${exports.API_PREFIX}`;
+exports.LOCAL_URL = `http://164.128.130.9:2530${exports.API_PREFIX}`;
 // Legacy Auth
 exports.JWT_SECRET = process.env.JWT_SECRET;
 exports.EMAIL_USER = process.env.EMAIL_USER; // Email service username/address

@@ -38,6 +38,12 @@ const videoSchema = new mongoose_1.default.Schema({
     title: String,
     videoUrl: String,
     duration: Number,
+    videoType: {
+        type: String,
+        enum: ["upload", "youtube"],
+        default: "upload",
+    },
+    youtubeId: String, // Store YouTube video ID for easier embedding
 });
 const sectionSchema = new mongoose_1.default.Schema({
     title: String,
@@ -58,5 +64,7 @@ const courseSchema = new mongoose_1.default.Schema({
         },
     ],
     enrolledUsers: [{ type: mongoose_1.default.Schema.Types.ObjectId, ref: "User" }],
+}, {
+    timestamps: true,
 });
 exports.default = mongoose_1.default.model("Course", courseSchema);

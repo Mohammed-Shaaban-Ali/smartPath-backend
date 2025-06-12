@@ -31,7 +31,7 @@ const stepSchema = z.object({
   step_number: z.number(),
   step_title: z.string(),
   description: z.string(),
-  link: z.string().nullable().optional(), // هنا التعديل
+  link: z.string().nullable().optional(),
   completed: z.boolean().default(false),
   categories: z.array(categorySchema),
 });
