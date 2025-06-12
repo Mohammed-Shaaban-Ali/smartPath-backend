@@ -1,15 +1,5 @@
 import { z } from "zod";
 
-// | "course"
-// | "single_video"
-// | "documentation"
-// | "pdf"
-// | "book"
-// | "tutorial"
-// | "practice"
-// | "project"
-// | "article"
-// | "tool"
 const typeOfLinkEnum = z.enum([
   "course",
   "single_video",
@@ -21,11 +11,12 @@ const typeOfLinkEnum = z.enum([
   "project",
   "article",
   "tool",
+  "playlist",
 ]);
 
 const itemSchema = z.object({
   title: z.string(),
-  link: z.string().nullable(),
+  link: z.string().nullable().optional(),
   duration: z.string(),
   type_of_link: typeOfLinkEnum,
   completed: z.boolean().default(false),
@@ -40,7 +31,7 @@ const stepSchema = z.object({
   step_number: z.number(),
   step_title: z.string(),
   description: z.string(),
-  link: z.string().nullable(),
+  link: z.string().nullable().optional(), // هنا التعديل
   completed: z.boolean().default(false),
   categories: z.array(categorySchema),
 });

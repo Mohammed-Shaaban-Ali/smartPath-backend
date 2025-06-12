@@ -295,7 +295,7 @@ export const loginAdminController = async (
     if (user.isBlocked) {
       throw new AppError("User is blocked", 401);
     }
-    if (user.isAdmin) {
+    if (!user.isAdmin) {
       throw new AppError("User Not Admin", 401);
     }
     // Compare the password with the hashed password

@@ -10,7 +10,8 @@ export type typeOfLink =
   | "practice"
   | "project"
   | "article"
-  | "tool";
+  | "tool"
+  | "playlist";
 type Roadmap = {
   title: string;
   introduction: string;
