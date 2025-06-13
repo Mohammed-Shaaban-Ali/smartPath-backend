@@ -78,6 +78,13 @@ export const registerController = async (
       otpExpiration,
     });
 
+    // Schedule deletion after 15 minutes
+    setTimeout(
+      () => {
+        pendingUsers.delete(email);
+      },
+      15 * 60 * 1000
+    );
     // Send verification email
     await sendVerificationEmail(name, email, otp);
 
@@ -187,7 +194,6 @@ export const resendOtpController = async (
       console.log("pendingUser", pendingUser);
       // Send new verification email
       await sendVerificationEmail(user?.name!, email, newOtp);
-      console.log("sendVerificationEmail");
     } else if (user) {
       // Update user in database with new OTP
       user.otp = newOtp;
