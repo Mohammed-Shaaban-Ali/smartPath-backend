@@ -104,7 +104,7 @@ export const createCourse = async (
       let sectionDuration = 0;
 
       const videos = section.videos.map((vid, vidIndex) => {
-        sectionDuration += vid.duration;
+        sectionDuration += Number(vid.duration);
 
         // Check if this is a YouTube video or uploaded video
         if (vid.videoType === "youtube" && vid.videoUrl) {
@@ -118,7 +118,7 @@ export const createCourse = async (
 
           return {
             title: vid.title,
-            duration: vid.duration,
+            duration: Number(vid.duration),
             videoUrl: vid.videoUrl,
             videoType: "youtube" as const,
             youtubeId: youtubeId || "",
@@ -135,18 +135,18 @@ export const createCourse = async (
 
           return {
             title: vid.title,
-            duration: vid.duration,
+            duration: Number(vid.duration),
             videoUrl: uploadedUrl || "",
             videoType: "upload" as const,
           };
         }
       });
 
-      totalCourseDuration += sectionDuration;
+      totalCourseDuration += Number(sectionDuration);
 
       return {
         title: section.title,
-        totalDuration: sectionDuration,
+        totalDuration: Number(sectionDuration),
         videos,
       };
     });
@@ -155,7 +155,7 @@ export const createCourse = async (
       title,
       description,
       image: imageUrl,
-      totalDuration: totalCourseDuration,
+      totalDuration: Number(totalCourseDuration),
       track: trackExists._id,
       sections: finalSections,
     });
@@ -219,7 +219,7 @@ export const updateCourse = async (
         let sectionDuration = 0;
 
         const videos = section.videos.map((vid, vidIndex) => {
-          sectionDuration += vid.duration;
+          sectionDuration += Number(vid.duration);
 
           if (vid.videoType === "youtube" && vid.videoUrl) {
             // Handle YouTube video
@@ -232,7 +232,7 @@ export const updateCourse = async (
 
             return {
               title: vid.title,
-              duration: vid.duration,
+              duration: Number(vid.duration),
               videoUrl: vid.videoUrl,
               videoType: "youtube" as const,
               youtubeId: youtubeId || "",
@@ -244,18 +244,18 @@ export const updateCourse = async (
 
             return {
               title: vid.title,
-              duration: vid.duration,
+              duration: Number(vid.duration),
               videoUrl: newUploadedUrl || vid.videoUrl || "",
               videoType: "upload" as const,
             };
           }
         });
 
-        totalCourseDuration += sectionDuration;
+        totalCourseDuration += Number(sectionDuration);
 
         return {
           title: section.title,
-          totalDuration: sectionDuration,
+          totalDuration: Number(sectionDuration),
           videos,
         };
       });
