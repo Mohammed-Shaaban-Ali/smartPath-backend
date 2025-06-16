@@ -5,6 +5,7 @@ import cloudinary from "../config/cloudinary";
 import asyncHandler from "../utils/async-handler.util";
 import formatRes from "../utils/format-res.util";
 import Group from "../models/Group";
+import { paginateArray } from "../utils/paginate";
 
 // ✅ Send Message (HTTP)
 export const sendMessage = asyncHandler(
@@ -115,5 +116,35 @@ export const deleteMessage = asyncHandler(
     await message.deleteOne();
 
     res.status(200).json(formatRes("Message deleted successfully."));
+  }
+);
+
+// ✅ Get all messages for dashboard of a group
+export const getAllMessagesForDashboard = asyncHandler(
+  async (req: AuthRequest, res: Response, next: NextFunction) => {
+    const { groupId } = req.params;
+    const page = parseInt(req.query.page as string, 10) || 1;
+    const limit = parseInt(req.query.limit as string, 10) || 10;
+
+    if (!groupId) {
+      res.status(400).json(formatRes("groupId is required."));
+      return;
+    }
+
+    const groupExists = await Group.findById(groupId);
+    if (!groupExists) {
+      res.status(404).json(formatRes("Group not found."));
+      return;
+    }
+
+    const messages = await Message.find({ group: groupId })
+      .populate("sender", "name avatar")
+      .populate("group", "name")
+      .sort({ createdAt: -1 });
+    const paginated = paginateArray(messages, page, limit);
+
+    res
+      .status(200)
+      .json(formatRes("Messages fetched successfully.", paginated));
   }
 );

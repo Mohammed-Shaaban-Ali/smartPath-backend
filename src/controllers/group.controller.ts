@@ -4,6 +4,8 @@ import { AuthRequest } from "../middlewares/authentication.middleware";
 import asyncHandler from "../utils/async-handler.util";
 import formatRes from "../utils/format-res.util";
 import cloudinary from "../config/cloudinary";
+import { paginateArray } from "../utils/paginate";
+import Message from "../models/Message";
 
 // ✅ Create Group
 export const createGroup = asyncHandler(
@@ -94,14 +96,55 @@ export const deleteGroup = asyncHandler(
       return;
     }
 
-    // Optional: ممكن تخليه اللي أنشأه بس يقدر يمسحه
-    if (group.createdBy.toString() !== req.userId) {
-      res.status(403).json(formatRes("Not authorized to delete this group."));
-      return;
-    }
-
     await group.deleteOne();
 
     res.status(200).json(formatRes("Group deleted successfully."));
+  }
+);
+
+// dashboard
+export const getAllGroupsForDashboard = asyncHandler(
+  async (req: AuthRequest, res: Response, next: NextFunction) => {
+    const groups = await Group.find()
+      .populate("createdBy", "name avatar")
+      .sort({ createdAt: -1 });
+    const page = parseInt(req.query.page as string, 10) || 1;
+    const limit = parseInt(req.query.limit as string, 10) || 10;
+    const paginated = paginateArray(groups, page, limit);
+
+    const dashboardGroups = await Promise.all(
+      paginated?.items?.map(async (group) => {
+        // number of messages
+        const messagesCount = await Message.countDocuments({
+          group: group._id,
+        });
+
+        // number of users
+        const uniqueUsers = await Message.distinct("sender", {
+          group: group._id,
+        });
+        const usersCount = uniqueUsers.length;
+
+        return {
+          _id: group._id,
+          name: group.name,
+          image: group.image,
+          createdBy: group.createdBy,
+          createdAt: group.createdAt,
+          messagesCount,
+          usersCount,
+        };
+      })
+    );
+
+    res.status(200).json(
+      formatRes("Groups fetched successfully.", {
+        items: dashboardGroups,
+        currentPage: paginated.currentPage,
+        perPage: paginated.perPage,
+        totalItems: paginated.totalItems,
+        totalPages: paginated.totalPages,
+      })
+    );
   }
 );
