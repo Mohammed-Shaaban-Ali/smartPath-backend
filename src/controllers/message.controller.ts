@@ -138,7 +138,7 @@ export const getAllMessagesForDashboard = asyncHandler(
     }
 
     const messages = await Message.find({ group: groupId })
-      .populate("sender", "name avatar")
+      .populate("sender", "name avatar isBlocked")
       .populate("group", "name")
       .sort({ createdAt: -1 });
     const paginated = paginateArray(messages, page, limit);

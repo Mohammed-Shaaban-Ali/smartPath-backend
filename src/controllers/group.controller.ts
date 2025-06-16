@@ -67,6 +67,42 @@ export const getAllGroups = asyncHandler(
       );
   }
 );
+// ✅ Update Group
+export const updateGroup = asyncHandler(
+  async (req: AuthRequest, res: Response, next: NextFunction) => {
+    const { groupId } = req.params;
+    const { name } = req.body;
+
+    const group = await Group.findById(groupId);
+    if (!group) {
+      res.status(404).json(formatRes("Group not found."));
+      return;
+    }
+
+    // Check if the new name already exists (and isn't the same as current group's name)
+    if (name && name !== group.name) {
+      const existingGroup = await Group.findOne({ name });
+      if (existingGroup) {
+        res.status(400).json(formatRes("Group name already exists."));
+        return;
+      }
+      group.name = name;
+    }
+
+    // Upload new image if provided
+    if (req.file) {
+      const result = await cloudinary.uploader.upload(req.file.path, {
+        folder: "groups",
+        resource_type: "image",
+      });
+      group.image = result.secure_url;
+    }
+
+    await group.save();
+
+    res.status(200).json(formatRes("Group updated successfully.", { group }));
+  }
+);
 
 // ✅ Get Group by Id
 export const getGroupById = asyncHandler(

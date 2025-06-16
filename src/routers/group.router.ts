@@ -5,6 +5,7 @@ import {
   getGroupById,
   deleteGroup,
   getAllGroupsForDashboard,
+  updateGroup,
 } from "../controllers/group.controller";
 import { authMiddleware } from "../middlewares/authentication.middleware";
 import { uploadImage } from "../middlewares/upload";
@@ -22,6 +23,7 @@ router.get("/dashboard", authMiddleware, getAllGroupsForDashboard);
 // ✅ Get group by id
 router.get("/:groupId", authMiddleware, getGroupById);
 
+router.put("/:id", uploadImage.single("image"), updateGroup);
 // ✅ Delete group
 router.delete("/:groupId", authMiddleware, deleteGroup);
 
